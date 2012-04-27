@@ -1,28 +1,22 @@
 package com.mjac.socialbackup.unittest;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.security.Security;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Random;
 
 import org.apache.commons.io.FileUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.joda.time.DateTime;
-import org.joda.time.Duration;
-import org.joda.time.Period;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runners.JUnit4;
 
-import com.mjac.socialbackup.Id;
 import com.mjac.socialbackup.RandomisedId;
 import com.mjac.socialbackup.crypto.KeystoreManager;
 import com.mjac.socialbackup.state.Backup;

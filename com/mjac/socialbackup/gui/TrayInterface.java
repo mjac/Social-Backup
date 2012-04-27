@@ -33,8 +33,6 @@ import com.mjac.socialbackup.state.PeerBase;
 import com.mjac.socialbackup.state.LocalPeer;
 
 public class TrayInterface extends TrayIcon implements ChangeListener {
-	private static final Logger logger = Logger.getLogger(TrayInterface.class);
-
 	protected LocalPeer localPeer;
 	protected ChangeDispatcher changeDispatcher;
 

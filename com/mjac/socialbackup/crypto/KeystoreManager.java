@@ -20,7 +20,6 @@ import java.util.Enumeration;
 import javax.crypto.SecretKey;
 import javax.net.ssl.KeyManagerFactory;
 
-import org.apache.commons.codec.binary.Hex;
 import org.apache.log4j.Logger;
 
 public class KeystoreManager {

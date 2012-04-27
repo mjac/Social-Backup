@@ -5,17 +5,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
 
 import com.mjac.socialbackup.Id;
-import com.mjac.socialbackup.msg.Message;
-import com.mjac.socialbackup.msg.StatusMessage;
-import com.mjac.socialbackup.services.SslConnection;
 
 public class Peer extends PeerBase {
 	private static final long serialVersionUID = 1L;

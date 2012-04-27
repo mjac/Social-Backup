@@ -2,8 +2,6 @@ package com.mjac.socialbackup.state;
 
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.Random;
 
 import org.joda.time.DateTime;

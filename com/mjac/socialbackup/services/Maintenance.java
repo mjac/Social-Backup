@@ -1,27 +1,21 @@
 package com.mjac.socialbackup.services;
 
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.PriorityQueue;
 import java.util.Map.Entry;
+import java.util.PriorityQueue;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
-import org.joda.time.Period;
 
-import com.mjac.socialbackup.Id;
 import com.mjac.socialbackup.state.Backup;
 import com.mjac.socialbackup.state.BackupStrategy;
+import com.mjac.socialbackup.state.BackupStrategy.ChunkComparer;
 import com.mjac.socialbackup.state.Chunk;
 import com.mjac.socialbackup.state.ChunkList;
-import com.mjac.socialbackup.state.RemotePeer;
-import com.mjac.socialbackup.state.PeerTracker;
 import com.mjac.socialbackup.state.LocalPeer;
-import com.mjac.socialbackup.state.BackupStrategy.ChunkComparer;
+import com.mjac.socialbackup.state.PeerTracker;
+import com.mjac.socialbackup.state.RemotePeer;
 
 public class Maintenance extends Thread {
 	private static final Logger logger = Logger.getLogger(Maintenance.class);

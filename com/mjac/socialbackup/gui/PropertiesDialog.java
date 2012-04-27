@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import javax.swing.GroupLayout;
+import javax.swing.GroupLayout.Group;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -14,13 +15,9 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.JTextPane;
-import javax.swing.GroupLayout.Group;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-
-import com.mjac.socialbackup.DaemonProperties;
 
 @Deprecated
 public class PropertiesDialog extends JDialog {
@@ -174,7 +171,7 @@ public class PropertiesDialog extends JDialog {
 		nextConfig.setProperty("host", hostText.getText());
 		nextConfig.setProperty("port", portText.getText());
 
-		ArrayList<String> errors = DaemonProperties.validate(nextConfig);
+		ArrayList<String> errors = new ArrayList<String>();//DaemonProperties.validate(nextConfig);
 
 		if (errors.size() < 1) {
 			resultConfig = nextConfig;

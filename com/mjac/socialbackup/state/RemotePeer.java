@@ -2,13 +2,10 @@ package com.mjac.socialbackup.state;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-import org.joda.time.Duration;
 
 import com.mjac.socialbackup.Id;
 import com.mjac.socialbackup.msg.ChunkListMessage;

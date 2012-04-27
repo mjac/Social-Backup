@@ -1,12 +1,9 @@
 package com.mjac.socialbackup.state;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.joda.time.DateTime;

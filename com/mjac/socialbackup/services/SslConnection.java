@@ -17,10 +17,9 @@ import javax.net.ssl.SSLPeerUnverifiedException;
 import javax.net.ssl.SSLSocket;
 import javax.swing.event.ChangeEvent;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
-
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import com.mjac.socialbackup.ChangeDispatcher;
 import com.mjac.socialbackup.msg.DisconnectMessage;

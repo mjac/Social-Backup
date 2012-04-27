@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.security.GeneralSecurityException;
 import java.security.KeyPair;
 import java.security.PrivateKey;
@@ -23,11 +22,10 @@ import javax.net.ssl.SSLContext;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.apache.commons.lang.NotImplementedException;
 import org.apache.log4j.Logger;
 import org.joda.time.Duration;
 import org.joda.time.ReadableDuration;
-
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import com.mjac.socialbackup.ChangeDispatcher;
 import com.mjac.socialbackup.Id;
@@ -38,7 +36,6 @@ import com.mjac.socialbackup.crypto.OpenTrustManager;
 import com.mjac.socialbackup.services.Maintenance;
 import com.mjac.socialbackup.services.SslConnection;
 import com.mjac.socialbackup.services.SslServer;
-import com.mjac.socialbackup.test.Profiler;
 
 /** Has a private key associated */
 public class LocalPeer extends Peer implements ChangeListener {

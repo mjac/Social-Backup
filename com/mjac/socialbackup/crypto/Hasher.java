@@ -10,8 +10,6 @@ import java.security.NoSuchAlgorithmException;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 
-import com.sun.corba.se.spi.orbutil.fsm.Input;
-
 public class Hasher {
 	static enum hashTypes {
 		sha1, none, crc32

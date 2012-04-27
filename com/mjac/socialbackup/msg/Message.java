@@ -1,7 +1,6 @@
 package com.mjac.socialbackup.msg;
 
 import java.io.Serializable;
-import java.util.Date;
 
 import org.joda.time.DateTime;
 

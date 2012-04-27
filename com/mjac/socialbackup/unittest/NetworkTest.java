@@ -1,13 +1,9 @@
 package com.mjac.socialbackup.unittest;
 
-import static org.junit.Assert.*;
-
 import java.io.File;
-import java.io.FileOutputStream;
 import java.security.Security;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.Random;
 
 import junit.framework.Assert;
@@ -15,22 +11,15 @@ import junit.framework.Assert;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.BasicConfigurator;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.joda.time.DateTime;
-import org.joda.time.Duration;
-import org.joda.time.Period;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runners.JUnit4;
 
-import com.mjac.socialbackup.Id;
 import com.mjac.socialbackup.RandomisedId;
 import com.mjac.socialbackup.crypto.KeystoreManager;
-import com.mjac.socialbackup.state.Backup;
 import com.mjac.socialbackup.state.LocalPeer;
-import com.mjac.socialbackup.test.Profiler;
 
 public class NetworkTest {
 	public Collection<LocalPeer> localPeers;
