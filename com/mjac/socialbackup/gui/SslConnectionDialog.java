@@ -102,7 +102,7 @@ public class SslConnectionDialog extends MutableDialog {
 					return;
 				}
 
-				boolean connected = servicePeer.connectTo(sslConn);
+				boolean connected = servicePeer.connect(sslConn);
 
 				if (!connected) {
 					JOptionPane
@@ -165,7 +165,7 @@ public class SslConnectionDialog extends MutableDialog {
 					return;
 				}
 
-				if (!servicePeer.createPeer(sslConn, alloc)) {
+				if (servicePeer.createPeer(sslConn, alloc) == null) {
 					JOptionPane.showMessageDialog(thisRef,
 							"Friend could not be created", "Friend add failed",
 							JOptionPane.ERROR_MESSAGE);

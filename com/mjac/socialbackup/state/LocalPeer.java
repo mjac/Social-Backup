@@ -16,6 +16,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.PriorityQueue;
+import java.util.Map.Entry;
 
 import javax.crypto.SecretKey;
 import javax.net.ssl.SSLContext;
@@ -36,6 +38,7 @@ import com.mjac.socialbackup.crypto.OpenTrustManager;
 import com.mjac.socialbackup.services.Maintenance;
 import com.mjac.socialbackup.services.SslConnection;
 import com.mjac.socialbackup.services.SslServer;
+import com.mjac.socialbackup.state.BackupStrategy.ChunkComparer;
 
 /** Has a private key associated */
 public class LocalPeer extends Peer implements ChangeListener {
@@ -46,12 +49,12 @@ public class LocalPeer extends Peer implements ChangeListener {
 	static public final int defaultPort = 134;
 
 	static protected final String fileExtension = ".local";
-	
+
 	/** Duration a chunk list remains valid. */
-	static protected final Duration listDuration = new Duration(30*1000);
+	static protected final Duration listDuration = new Duration(30 * 1000);
 
 	/** Duration a user's status remains active. */
-	static protected final Duration statusDuration = new Duration(15*1000);
+	static protected final Duration statusDuration = new Duration(15 * 1000);
 
 	protected boolean recovering = false;
 
@@ -218,8 +221,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 		}
 	}
 
-	public boolean createPeer(SslConnection sslPeer, long remoteAllocation) {
-
+	public RemotePeer createPeer(SslConnection sslPeer, long remoteAllocation) {
 		PublicKey publicKey = sslPeer.getPublicKey();
 		String existingAlias = keystoreManager.getRawId(publicKey);
 
@@ -236,24 +238,23 @@ public class LocalPeer extends Peer implements ChangeListener {
 			try {
 				existingKey = keystoreManager.getPublicKey(newPeer.getId()
 						.toString());
-			} catch (GeneralSecurityException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
+			} catch (GeneralSecurityException e) {
+				logger.warn("Could not get public key", e);
 			}
+
 			if (existingKey != null) {
-				logger
-						.warn("Random alias already assigned to key - generated IDs may not be random!");
-				return false;
+				logger.warn("Random alias already assigned to key - generated IDs may not be random!");
+				return null;
 			}
 
 			try {
-				keystoreManager.setKey(newPeer.getId().toString(), sslPeer
-						.getPublicKey());
+				keystoreManager.setKey(newPeer.getId().toString(),
+						sslPeer.getPublicKey());
 				keystoreManager.store();
 				logger.trace("Key stored in keystore");
 			} catch (Exception e) {
 				logger.warn("Could not set public key for new peer", e);
-				return false;
+				return null;
 			}
 		} else {
 			// Associated in keystore, create peer.
@@ -265,9 +266,8 @@ public class LocalPeer extends Peer implements ChangeListener {
 
 		RemotePeer alreadyAssigned = peers.get(newPeer.getId());
 		if (alreadyAssigned != null) {
-			logger
-					.warn("ID already assigned to peer - already a peer associated");
-			return false;
+			logger.warn("ID already assigned to peer - already a peer associated");
+			return null;
 		}
 
 		newPeer.copyStatus(sslPeer);
@@ -287,7 +287,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 		changeDispatcher.stateChanged(new ChangeEvent(newPeer));
 		changeDispatcher.stateChanged(new ChangeEvent(sslPeer));
 
-		return true;
+		return newPeer;
 	}
 
 	private void connectPeer(SslConnection sslPeer, RemotePeer peer) {
@@ -299,17 +299,6 @@ public class LocalPeer extends Peer implements ChangeListener {
 		sslPeer.setUser(peer);
 	}
 
-	/**
-	 * Connect user to another Social Backup system through an SSL connection.
-	 */
-	public boolean connectTo(SslConnection newPeer) {
-		if (!newPeer.connect()) {
-			return false;
-		}
-
-		return handleConnection(newPeer);
-	}
-//rename to handleconnection!
 	public boolean handleConnection(SslConnection sslPeer) {
 		logger.trace("Handling peer");
 
@@ -337,8 +326,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 			RemotePeer newPeer = peers.get(peerId);
 
 			if (newPeer == null) {
-				logger
-						.warn("Peer missing for recognised key, treating as SSL peer");
+				logger.warn("Peer missing for recognised key, treating as SSL peer");
 			} else {
 				logger.trace("Key corresponds to existing peer "
 						+ newPeer.getAlias());
@@ -360,8 +348,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 			}
 		}
 
-		logger
-				.trace("Unrecognised peer, handling and putting into friend request queue");
+		logger.trace("Unrecognised peer, handling and putting into friend request queue");
 		sslPeer.startReceiver();
 		sslPeer.sendStatus();
 
@@ -562,6 +549,26 @@ public class LocalPeer extends Peer implements ChangeListener {
 		return false;
 	}
 
+	/**
+	 * Connect user to another Social Backup system through an SSL connection.
+	 */
+	public boolean connect(PeerBase targetPeer) {
+		SslConnection sslConn = createSslConnection();
+		sslConn.setValidHostPort(targetPeer.getHost(), targetPeer.getPort());
+
+		boolean connected = sslConn.connect();
+		tracker.connectAttempt(connected);
+
+		logger.trace(getAlias() + " --connect--> " + targetPeer.getAlias()
+				+ " = " + (connected ? "yes" : "no"));
+
+		if (connected) {
+			return handleConnection(sslConn);
+		}
+
+		return false;
+	}
+
 	public SslConnection createSslConnection() {
 		return new SslConnection(this, changeDispatcher);
 	}
@@ -573,5 +580,57 @@ public class LocalPeer extends Peer implements ChangeListener {
 
 	public ReadableDuration getStatusDuration() {
 		return statusDuration;
+	}
+
+	/** Create a strategy for placing available chunks onto peers. */
+	public void createPlacingStrategy() {
+		logger.debug("Creating placing strategy for " + getBackups().size()
+				+ " backups to " + getPeers().size() + " peers");
+
+		PriorityQueue<ChunkComparer> comparer = new PriorityQueue<ChunkComparer>();
+
+		for (Backup backup : getBackups()) {
+			BackupStrategy backupStrategy = backup.getStrategy();
+			if (backupStrategy == null) {
+				backupStrategy = getBackupStrategy();
+			}
+			backupStrategy.place(backup, this, comparer);
+		}
+
+		logger.trace(comparer);
+
+		// Collection<RemotePeer> remotePeers = user.getPeers();
+		HashMap<RemotePeer, ChunkList> newChunkLists = new HashMap<RemotePeer, ChunkList>();
+
+		for (ChunkComparer cc : comparer) {
+			if (cc.getSuitability() <= 0.0) {
+				continue;
+			}
+
+			RemotePeer remotePeer = cc.getPeer();
+			ChunkList chunkList = newChunkLists.get(remotePeer);
+			if (chunkList == null) {
+				chunkList = new ChunkList();
+				newChunkLists.put(remotePeer, chunkList);
+			}
+
+			Chunk chunk = cc.getChunk();
+			if (chunkList.canHave(remotePeer, chunk)) {
+				chunkList.set(cc.getChunk());
+			}
+		}
+
+		for (Entry<RemotePeer, ChunkList> entry : newChunkLists.entrySet()) {
+			entry.getKey().setChunkList(entry.getValue());
+			logger.trace(entry.getKey().getAlias() + " now contains: "
+					+ entry.getValue());
+		}
+	}
+
+	/** Check to see if peers have messages to send or needs sync. */
+	public void performSync() {
+		for (RemotePeer peer : getPeers()) {
+			peer.maintenance();
+		}
 	}
 }

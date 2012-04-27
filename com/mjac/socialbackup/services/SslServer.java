@@ -1,6 +1,7 @@
 package com.mjac.socialbackup.services;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -55,22 +56,17 @@ public class SslServer extends Thread {
 
 			while (sock.isBound()) {
 				SSLSocket sslSoc = (SSLSocket) sock.accept();
-				logger
-						.trace("Client connected from "
-								+ sslSoc.getInetAddress());
+				logger.trace("Client connected from " + sslSoc.getInetAddress());
 				SslConnection newPeer = localPeer.createSslConnection();
 				newPeer.setSocket(sslSoc);
 				localPeer.placePeer(newPeer);
 			}
 		} catch (SocketException e) {
 			logger.info("Server thread stopped", e);
-			return;
 		} catch (IOException e) {
-			logger
-					.error(
-							"SslServer socket error, server thread stopped unexpectedly",
-							e);
-			return;
+			logger.error(
+					"SslServer socket error, server thread stopped unexpectedly",
+					e);
 		}
 	}
 

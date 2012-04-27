@@ -55,7 +55,9 @@ public class Backup implements Serializable {
 	}
 
 	/**
-	 * Recover mode, use a single chunk to specify the file, then look at the
+	 * Normal way to specific a backup
+	 * 
+	 * In recover mode, use a single chunk to specify the file, then look at the
 	 * gaps
 	 */
 	public Backup(File file) {

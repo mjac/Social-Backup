@@ -42,11 +42,11 @@ public class Maintenance extends Thread {
 			//logger.trace("Running " + taskIdx);
 
 			if (taskIdx % strategyInterval == 0) {
-				createPlacingStrategy();
+				user.createPlacingStrategy();
 			}
 
 			if (taskIdx % syncInterval == 0) {
-				performSync();
+				user.performSync();
 			}
 
 			if (taskIdx % timeoutInterval == 0) {
@@ -62,55 +62,6 @@ public class Maintenance extends Thread {
 			}
 
 			++taskIdx;
-		}
-	}
-
-	/** Create a strategy for placing available chunks onto peers. */
-	public void createPlacingStrategy() {
-		PriorityQueue<ChunkComparer> comparer = new PriorityQueue<ChunkComparer>();
-
-		for (Backup backup : user.getBackups()) {
-			BackupStrategy backupStrategy = backup.getStrategy();
-			if (backupStrategy == null) {
-				backupStrategy = user.getBackupStrategy();
-			}
-			backupStrategy.place(backup, user, comparer);
-		}
-
-		logger.trace(comparer.toString());
-
-		// Collection<RemotePeer> remotePeers = user.getPeers();
-		HashMap<RemotePeer, ChunkList> newChunkLists = new HashMap<RemotePeer, ChunkList>();
-
-		for (ChunkComparer cc : comparer) {
-			if (cc.getSuitability() <= 0.0) {
-				continue;
-			}
-
-			RemotePeer remotePeer = cc.getPeer();
-			ChunkList chunkList = newChunkLists.get(remotePeer);
-			if (chunkList == null) {
-				chunkList = new ChunkList();
-				newChunkLists.put(remotePeer, chunkList);
-			}
-
-			Chunk chunk = cc.getChunk();
-			if (chunkList.canHave(remotePeer, chunk)) {
-				chunkList.set(cc.getChunk());
-			}
-		}
-
-		for (Entry<RemotePeer, ChunkList> entry : newChunkLists.entrySet()) {
-			entry.getKey().setChunkList(entry.getValue());
-			logger.trace(entry.getKey().getAlias() + " now contains: "
-					+ entry.getValue());
-		}
-	}
-
-	/** Check to see if peers have messages to send or needs sync. */
-	public void performSync() {
-		for (RemotePeer peer : user.getPeers()) {
-			peer.maintenance();
 		}
 	}
 

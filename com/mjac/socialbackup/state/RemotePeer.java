@@ -228,29 +228,13 @@ public class RemotePeer extends Peer {
 		return writeChunkData(chunk, data, remoteChunks);
 	}
 
-	/**
-	 * Create a SSL connection to the last known details for this peer, does not
-	 * change peer state directly.
-	 */
-	public void connect(SslConnection sslConn) {
-		sslConn.setValidHostPort(host, port);
-		boolean connected = sslConn.connect();
-		tracker.connectAttempt(connected);
-
-		logger.trace(localPeer.getAlias() + " --connect--> " + alias + " = "
-				+ (connected ? "yes" : "no"));
-
-		if (connected) {
-			localPeer.handleConnection(sslConn);
-		}
-	}
-
 	/** Connect and send messages, if not already connected. */
 	public void connectForSend() {
 		if (outgoing.isEmpty() || isHandled()) {
 			return;
 		}
-		connect(localPeer.createSslConnection());
+
+		localPeer.connect(this);
 	}
 
 	/**
