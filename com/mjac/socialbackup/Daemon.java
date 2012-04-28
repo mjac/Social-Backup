@@ -116,7 +116,7 @@ public class Daemon {
 	/** Entry for the application */
 	public static void main(String[] args) {
 		BasicConfigurator.configure();
-		Logger.getRootLogger().setLevel(Level.INFO);
+		Logger.getRootLogger().setLevel(Level.TRACE);
 
 		logger.info("Application started");
 

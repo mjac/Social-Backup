@@ -67,6 +67,11 @@ public class RemotePeer extends Peer {
 	}
 
 	public void setHandler(SslConnection sslPeer) {
+		if (isHandled()) {
+			stopSender();
+			getHandler().disconnect();
+		}
+
 		this.sslPeer = sslPeer;
 		sslPeer.setUser(this);
 	}
@@ -94,8 +99,6 @@ public class RemotePeer extends Peer {
 			try {
 				Message message = outgoing.take();
 				if (!(sending && sslPeer.isConnected() && sslPeer.send(message))) {
-					// Check to see if it has failed
-					// and put back on the queue?
 					send(message);
 				}
 			} catch (InterruptedException e) {
@@ -129,67 +132,11 @@ public class RemotePeer extends Peer {
 		send(new ChunkListMessage(chunks, remoteChunks));
 	}
 
-	public void receive(Message message, LocalPeer localPeer) {
-		logger.trace("@" + localPeer.getAlias() + " <- "
-				+ message.getClass().getSimpleName() + " <- " + getAlias());
-
-		tracker.messageReceived();
-
-		if (!message.valid()) {
-			logger.warn("Invalid message " + message);
-			return;
-		}
-
-		if (message instanceof StatusMessage) {
-			updateStatus((StatusMessage) message);
-		} else if (message instanceof ChunkMessage) {
-			receiveChunk((ChunkMessage) message, localPeer);
-		} else if (message instanceof ChunkListMessage) {
-			receiveLists((ChunkListMessage) message, localPeer);
-		}
-	}
-
-	private void syncSenderList(ChunkList senderChunks) {
-		ChunkList compare = senderChunks.missing(remoteChunks);
-		for (Chunk chunk : compare.getChunks()) {
-			send(new ChunkReturnMessage(chunk, this));
-		}
-	}
-
-	private void syncReceiverList(ChunkList receiverChunks, LocalPeer localPeer) {
-		ChunkList compare = receiverChunks.missing(chunks);
-		for (Chunk chunk : compare.getChunks()) {
-			send(new ChunkSendMessage(chunk, localPeer));
-		}
-	}
-	
-	private void receiveLists(ChunkListMessage message, LocalPeer localPeer) {
-		tracker.syncReceived();
-		syncReceiverList(message.getReceiverChunks(), localPeer);
-		syncSenderList(message.getSenderChunks());
-	}
-
-	private boolean receiveChunk(ChunkMessage message, LocalPeer localPeer) {
-		Chunk chunk = message.getChunk();
-		byte[] data = message.getData();
-
-		if (message instanceof ChunkSendMessage) {
-			return receiveRemoteChunk(chunk, data);
-		} else if (message instanceof ChunkReturnMessage) {
-			return localPeer.receiveChunkData(chunk, data);
-		} else {
-			return false;
-		}
-	}
-
-	/**
-	 * @todo Should have some synchronization here
-	 */
-	private boolean receiveRemoteChunk(Chunk chunk, byte[] data) {
+	public boolean receiveRemoteChunk(Chunk chunk, byte[] data) {
 		if (remoteChunks.has(chunk)) {
 			return false;
 		}
-		
+
 		long freespace = getRemoteFreeSpace();
 		if (freespace < data.length) {
 			return false;
@@ -202,7 +149,7 @@ public class RemotePeer extends Peer {
 	public boolean needsConnect() {
 		return !(outgoing.isEmpty() || isHandled());
 	}
-	
+
 	public boolean needsChunkListing(ReadableDuration listValidDuration) {
 		return tracker.needsSync(listValidDuration);
 	}
@@ -232,12 +179,11 @@ public class RemotePeer extends Peer {
 
 		throw new IOException("Invalid remote peer type");
 	}
-	
+
 	private void readObject(java.io.ObjectInputStream stream)
-    throws IOException, ClassNotFoundException
-    {
+			throws IOException, ClassNotFoundException {
 		stream.defaultReadObject();
 		outgoing = new LinkedBlockingQueue<Message>();
 		sending = false;
-    }
+	}
 }

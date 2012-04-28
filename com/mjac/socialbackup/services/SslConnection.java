@@ -306,6 +306,7 @@ public class SslConnection extends PeerBase {
 		if (receiverThread != null && receiverThread.isAlive()) {
 			return;
 		}
+
 		receiving = true;
 		receiverThread = new Thread(new Runnable() {
 			@Override
@@ -322,10 +323,15 @@ public class SslConnection extends PeerBase {
 	}
 
 	protected void handleMessage(Message message, LocalPeer localPeer) {
-
+		if (!message.valid()) {
+			logger.warn("Invalid message");
+			logger.debug(message);
+			return;
+		}
+		
 		if (message instanceof PeerMessage) {
 			if (hasAssociatedPeer()) {
-				peer.receive(message, localPeer);
+				localPeer.receive(message, peer);
 			} else {
 				logger.warn("Peer message dropped as not authenticated ("
 						+ message.getClass().getSimpleName() + ")");
@@ -333,24 +339,20 @@ public class SslConnection extends PeerBase {
 			return;
 		}
 
-		// Handle SSL peer messages.
-
 		if (message instanceof DisconnectMessage) {
 			logger.trace("Peer is disconnecting");
-			receivedDisconnect = true; // So we don't send on an inactive output
-			// stream.
-
+			receivedDisconnect = true;
 			disconnect();
 		} else if (message instanceof StatusMessage) {
 			updateStatus((StatusMessage) message);
 			if (hasAssociatedPeer()) {
-				peer.receive(message, localPeer);
+				localPeer.receive(message, peer);
 			}
 			changeDispatcher.stateChanged(new ChangeEvent(this));
+		} else {
+			logger.warn("Received unknown peer message");
+			logger.debug(message);
 		}
-
-		// Is it a peer message, if so send invalid message if peer is not
-		// assigned.
 	}
 
 	/**

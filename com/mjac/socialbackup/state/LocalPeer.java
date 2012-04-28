@@ -37,6 +37,10 @@ import com.mjac.socialbackup.crypto.BouncyCastleGenerator;
 import com.mjac.socialbackup.crypto.KeystoreManager;
 import com.mjac.socialbackup.crypto.OpenTrustManager;
 import com.mjac.socialbackup.msg.ChunkListMessage;
+import com.mjac.socialbackup.msg.ChunkMessage;
+import com.mjac.socialbackup.msg.ChunkReturnMessage;
+import com.mjac.socialbackup.msg.ChunkSendMessage;
+import com.mjac.socialbackup.msg.Message;
 import com.mjac.socialbackup.msg.StatusMessage;
 import com.mjac.socialbackup.services.Maintenance;
 import com.mjac.socialbackup.services.SslConnection;
@@ -276,7 +280,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 		persist();
 		newPeer.persist();
 
-		connectPeer(sslPeer, newPeer);
+		newPeer.setHandler(sslPeer);
 
 		newPeer.startSender();
 		sslPeer.startReceiver(this);
@@ -285,15 +289,6 @@ public class LocalPeer extends Peer implements ChangeListener {
 		changeDispatcher.stateChanged(new ChangeEvent(sslPeer));
 
 		return newPeer;
-	}
-
-	private void connectPeer(SslConnection sslPeer, RemotePeer peer) {
-		if (peer.isHandled()) {
-			peer.stopSender();
-			peer.getHandler().disconnect();
-		}
-		peer.setHandler(sslPeer);
-		sslPeer.setUser(peer);
 	}
 
 	public boolean handleConnection(SslConnection sslPeer) {
@@ -328,10 +323,11 @@ public class LocalPeer extends Peer implements ChangeListener {
 				logger.trace("Key corresponds to existing peer "
 						+ newPeer.getAlias());
 
-				connectPeer(sslPeer, newPeer);
+				newPeer.setHandler(sslPeer);
 
 				newPeer.startSender();
 				sslPeer.startReceiver(this);
+
 				newPeer.send(new StatusMessage(this));
 
 				changeDispatcher.stateChanged(new ChangeEvent(newPeer));
@@ -670,4 +666,53 @@ public class LocalPeer extends Peer implements ChangeListener {
 		}
 		return true;
 	}
+
+	public void receive(Message message, RemotePeer peer) {
+		logger.trace("@" + getAlias() + " <- "
+				+ message.getClass().getSimpleName() + " <- " + peer.getAlias());
+
+		peer.tracker.messageReceived();
+
+		if (message instanceof StatusMessage) {
+			peer.updateStatus((StatusMessage) message);
+		} else if (message instanceof ChunkMessage) {
+			receiveChunk((ChunkMessage) message, peer);
+		} else if (message instanceof ChunkListMessage) {
+			receiveLists((ChunkListMessage) message, peer);
+		}
+	}
+
+	public void receiveLists(ChunkListMessage message, RemotePeer peer) {
+		peer.tracker.syncReceived();
+		syncReceiverList(message.getReceiverChunks(), peer);
+		syncSenderList(message.getSenderChunks(), peer);
+	}
+	
+	private void syncSenderList(ChunkList senderChunks, RemotePeer peer) {
+		ChunkList compare = senderChunks.missing(peer.remoteChunks);
+		for (Chunk chunk : compare.getChunks()) {
+			peer.send(new ChunkReturnMessage(chunk, this));
+		}
+	}
+
+	private void syncReceiverList(ChunkList receiverChunks, RemotePeer peer) {
+		ChunkList compare = receiverChunks.missing(peer.chunks);
+		for (Chunk chunk : compare.getChunks()) {
+			peer.send(new ChunkSendMessage(chunk, this));
+		}
+	}
+	
+	public boolean receiveChunk(ChunkMessage message, RemotePeer peer) {
+		Chunk chunk = message.getChunk();
+		byte[] data = message.getData();
+
+		if (message instanceof ChunkSendMessage) {
+			return peer.receiveRemoteChunk(chunk, data);
+		} else if (message instanceof ChunkReturnMessage) {
+			return receiveChunkData(chunk, data);
+		} else {
+			return false;
+		}
+	}
+
 }
