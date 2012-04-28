@@ -6,18 +6,13 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.security.GeneralSecurityException;
 
-import javax.crypto.Cipher;
-import javax.crypto.CipherOutputStream;
-
 import org.apache.log4j.Logger;
 
 import com.mjac.socialbackup.Id;
-import com.mjac.socialbackup.RandomisedId;
 
 /** Just a data store. */
 public class Chunk implements Serializable {

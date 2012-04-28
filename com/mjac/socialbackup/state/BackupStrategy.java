@@ -2,7 +2,6 @@ package com.mjac.socialbackup.state;
 
 import java.io.Serializable;
 import java.util.PriorityQueue;
-import java.util.AbstractMap.SimpleEntry;
 
 import com.mjac.socialbackup.Id;
 

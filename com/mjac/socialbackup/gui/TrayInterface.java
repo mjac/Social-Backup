@@ -20,7 +20,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 
 import com.mjac.socialbackup.ChangeDispatcher;
 import com.mjac.socialbackup.Daemon;
@@ -28,9 +27,8 @@ import com.mjac.socialbackup.email.Emailer;
 import com.mjac.socialbackup.services.SslConnection;
 import com.mjac.socialbackup.services.SslServer;
 import com.mjac.socialbackup.state.Backup;
-import com.mjac.socialbackup.state.RemotePeer;
-import com.mjac.socialbackup.state.PeerBase;
 import com.mjac.socialbackup.state.LocalPeer;
+import com.mjac.socialbackup.state.RemotePeer;
 
 public class TrayInterface extends TrayIcon implements ChangeListener {
 	protected LocalPeer localPeer;

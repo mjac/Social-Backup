@@ -2,7 +2,6 @@ package com.mjac.socialbackup.unittest;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.io.IOException;
 import java.security.Security;
 
 import org.apache.commons.io.FileUtils;
@@ -24,7 +23,6 @@ import com.mjac.socialbackup.services.SslConnection;
 import com.mjac.socialbackup.state.Backup;
 import com.mjac.socialbackup.state.LocalPeer;
 import com.mjac.socialbackup.state.RemotePeer;
-
 
 public class NetworkTest {
 	public static File dir = new File("networktest");
@@ -48,7 +46,7 @@ public class NetworkTest {
 	private LocalPeer you;
 
 	private LocalPeer me;
-	
+
 	private String backupText = "Hi, this is my first backup!";
 
 	@Before
@@ -58,12 +56,11 @@ public class NetworkTest {
 	}
 
 	private LocalPeer createRandomPeer(int peerIndex) throws Exception {
-		LocalPeer localPeer = new LocalPeer(new RandomisedId());
-
-		File peerDir = new File(dir.getAbsolutePath() + File.separatorChar
-				+ localPeer.getId());
+		RandomisedId id = new RandomisedId();
+		File peerDir = new File(dir.getAbsolutePath() + File.separatorChar + id);
 		peerDir.mkdir();
-		localPeer.setDirectory(peerDir);
+
+		LocalPeer localPeer = new LocalPeer(id, peerDir);
 
 		KeystoreManager km = new KeystoreManager(
 				new File(peerDir.getAbsolutePath() + File.separatorChar
@@ -75,7 +72,7 @@ public class NetworkTest {
 		localPeer.setValidAlias("Host" + peerIndex);
 		localPeer.setValidEmail("host" + peerIndex + "@localhost.com");
 		localPeer.setValidHostPort("localhost", 15323 + peerIndex);
-		
+
 		ChangeDispatcher changeDispatcher = new ChangeDispatcher();
 		changeDispatcher.createThread();
 
@@ -99,7 +96,7 @@ public class NetworkTest {
 		FileWriter fw = new FileWriter(myBackup);
 		fw.write(backupText);
 		fw.close();
-		
+
 		Backup backup = new Backup(myBackup);
 		me.addBackup(backup);
 
@@ -107,11 +104,13 @@ public class NetworkTest {
 
 		Assert.assertTrue(me.connect(you));
 
-		RemotePeer meInYou = you.createPeer(me.getConnections().toArray(new SslConnection[]{})[0], 100);
+		RemotePeer meInYou = you.createPeer(
+				me.getConnections().toArray(new SslConnection[] {})[0], 100);
 		Assert.assertTrue(meInYou.isHandled());
 		Assert.assertTrue(meInYou.isConnectionUsed(you));
 
-		RemotePeer youInMe = me.createPeer(you.getConnections().toArray(new SslConnection[]{})[0], 100);
+		RemotePeer youInMe = me.createPeer(
+				you.getConnections().toArray(new SslConnection[] {})[0], 100);
 		Assert.assertTrue(youInMe.isHandled());
 		Assert.assertTrue(youInMe.isConnectionUsed(me));
 

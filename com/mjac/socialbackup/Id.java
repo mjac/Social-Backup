@@ -6,8 +6,6 @@ import java.nio.ByteBuffer;
 import java.util.Collection;
 import java.util.Random;
 
-import org.apache.log4j.Logger;
-
 /**
  * Other encoding formats "Unlike base 32 and base 64, no special padding is
  * necessary since a full code word is always available."

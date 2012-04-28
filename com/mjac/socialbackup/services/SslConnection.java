@@ -10,7 +10,6 @@ import java.net.InetSocketAddress;
 import java.net.SocketException;
 import java.security.PublicKey;
 import java.security.cert.Certificate;
-import java.util.Date;
 import java.util.concurrent.PriorityBlockingQueue;
 
 import javax.net.ssl.SSLPeerUnverifiedException;
@@ -26,10 +25,10 @@ import com.mjac.socialbackup.msg.DisconnectMessage;
 import com.mjac.socialbackup.msg.Message;
 import com.mjac.socialbackup.msg.PeerMessage;
 import com.mjac.socialbackup.msg.StatusMessage;
-import com.mjac.socialbackup.state.Peer;
-import com.mjac.socialbackup.state.RemotePeer;
-import com.mjac.socialbackup.state.PeerBase;
 import com.mjac.socialbackup.state.LocalPeer;
+import com.mjac.socialbackup.state.Peer;
+import com.mjac.socialbackup.state.PeerBase;
+import com.mjac.socialbackup.state.RemotePeer;
 
 @SuppressWarnings("serial")
 public class SslConnection extends PeerBase {
@@ -360,7 +359,7 @@ public class SslConnection extends PeerBase {
 	 */
 	public void sendStatus(LocalPeer localPeer) {
 		if (hasAssociatedPeer()) {
-			peer.sendStatus(localPeer);
+			peer.send(new StatusMessage(localPeer));
 			return;
 		}
 

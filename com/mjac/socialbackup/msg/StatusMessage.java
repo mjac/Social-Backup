@@ -1,5 +1,7 @@
 package com.mjac.socialbackup.msg;
 
+import com.mjac.socialbackup.state.PeerBase;
+
 /** Hints at properties of the peer, without authority. */
 public class StatusMessage extends Message {
 	private static final long serialVersionUID = 1L;
@@ -19,6 +21,14 @@ public class StatusMessage extends Message {
 		this.host = host;
 		this.port = port;
 		this.allocation = allocation;
+	}
+
+	public StatusMessage(PeerBase localPeer) {
+		this.alias = localPeer.getAlias();
+		this.email = localPeer.getEmail();
+		this.host = localPeer.getHost();
+		this.port = localPeer.getPort();
+		this.allocation = localPeer.getAllocation();
 	}
 
 	public String getHost() {

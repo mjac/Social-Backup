@@ -37,8 +37,8 @@ public class RemotePeer extends Peer {
 	/** Allocation to the remote peer. */
 	protected long remoteAllocation = 0L;
 
-	public RemotePeer(Id id) {
-		super(id);
+	public RemotePeer(Id id, File localStore) {
+		super(id, localStore);
 	}
 
 	public void setRemoteAllocation(long remoteAllocation) {
@@ -126,13 +126,6 @@ public class RemotePeer extends Peer {
 	public void sendChunkListing() {
 		tracker.syncSent();
 		ChunkListMessage message = new ChunkListMessage(chunks, remoteChunks);
-		send(message);
-	}
-
-	public void sendStatus(LocalPeer localPeer) {
-		StatusMessage message = new StatusMessage(localPeer.getAlias(),
-				localPeer.getEmail(), localPeer.getHost(), localPeer.getPort(),
-				localPeer.getAllocation());
 		send(message);
 	}
 
@@ -254,7 +247,7 @@ public class RemotePeer extends Peer {
 		if (tracker.getLastReceived() == null || tracker.getLastSent() == null
 				|| tracker.getLastReceived().isBefore(lastStatusRequired)
 				|| tracker.getLastSent().isBefore(lastStatusRequired)) {
-			sendStatus(localPeer);
+			send(new StatusMessage(localPeer));
 		}
 
 		if (!isConnectionUsed(localPeer)) {
@@ -275,8 +268,8 @@ public class RemotePeer extends Peer {
 	}
 
 	@Override
-	public File getFile(LocalPeer localPeer) {
-		return getFile(localPeer, fileExtension);
+	public File getFile() {
+		return getFile(fileExtension);
 	}
 
 	static public Id fileId(File checkFile) {
@@ -286,8 +279,8 @@ public class RemotePeer extends Peer {
 	// SYNC TO DISK
 
 	@Override
-	public RemotePeer restore(LocalPeer localPeer) {
-		Peer cp = super.restore(localPeer);
+	public RemotePeer restore() {
+		Peer cp = super.restore();
 		if (cp instanceof RemotePeer) {
 			return (RemotePeer) cp;
 		}

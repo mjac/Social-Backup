@@ -1,9 +1,5 @@
 package com.mjac.socialbackup.msg;
 
-import java.util.Map;
-
-import com.mjac.socialbackup.Id;
-import com.mjac.socialbackup.state.Chunk;
 import com.mjac.socialbackup.state.ChunkList;
 
 public class ChunkListMessage extends PeerMessage {

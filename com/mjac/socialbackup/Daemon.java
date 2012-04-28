@@ -173,12 +173,10 @@ public class Daemon {
 
 			logger.trace("Found service " + serviceId);
 
-			LocalPeer sp = new LocalPeer(serviceId);
-			sp.setDirectory(directory);
+			LocalPeer sp = new LocalPeer(serviceId, directory);
 
-			LocalPeer spRestored = sp.restore(sp);
+			LocalPeer spRestored = sp.restore();
 			if (spRestored != null) {
-				spRestored.setDirectory(directory);
 				spRestored.setKeystoreManager(keystoreManager);
 				spRestored.restoreClients();
 				servicePeers.add(spRestored);
@@ -187,8 +185,7 @@ public class Daemon {
 
 		int peerNo = servicePeers.size();
 		if (peerNo < 1) {
-			LocalPeer newService = new LocalPeer(new RandomisedId());
-			newService.setDirectory(directory);
+			LocalPeer newService = new LocalPeer(new RandomisedId(), directory);
 			newService.setKeystoreManager(keystoreManager);
 
 			if (!editService(newService)) {
@@ -266,7 +263,7 @@ public class Daemon {
 		sdChanger.setVisible(true);
 
 		if (sdChanger.changed()) {
-			return sp.persist(sp);
+			return sp.persist();
 		}
 
 		return false;

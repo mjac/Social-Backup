@@ -31,9 +31,8 @@ public class BackupTest {
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		Security.addProvider(new BouncyCastleProvider());
-		localPeer = new LocalPeer(new RandomisedId());
 		dir.mkdir();
-		localPeer.setDirectory(dir);
+		localPeer = new LocalPeer(new RandomisedId(), dir);
 		KeystoreManager km = new KeystoreManager(new File(dir.getAbsolutePath()
 				+ File.separatorChar + "keystore.bks"), new char[] {});
 		km.blank();

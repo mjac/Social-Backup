@@ -19,7 +19,6 @@ import org.joda.time.DateTime;
 import com.mjac.socialbackup.Id;
 import com.mjac.socialbackup.RandomisedId;
 import com.mjac.socialbackup.crypto.Hasher;
-import com.mjac.socialbackup.test.Profiler;
 
 public class Backup implements Serializable {
 	private static final long serialVersionUID = 1L;

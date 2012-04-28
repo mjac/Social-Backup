@@ -30,8 +30,11 @@ public class Peer extends PeerBase {
 	/** List of chunks associated with the peer. */
 	protected ChunkList chunks = new ChunkList();
 
-	public Peer(Id id) {
+	private File localStore;
+
+	public Peer(Id id, File localStore) {
 		this.id = id;
+		this.localStore = localStore;
 	}
 
 	public PeerTracker getTracker() {
@@ -39,9 +42,8 @@ public class Peer extends PeerBase {
 	}
 
 	// CHUNKS CORRESPONDING TO THE PEER
-	
-	public ChunkList getChunkList()
-	{
+
+	public ChunkList getChunkList() {
 		return chunks;
 	}
 
@@ -51,13 +53,12 @@ public class Peer extends PeerBase {
 
 	// PEER LOCATION ON DISK
 
-	public File getFile(LocalPeer localPeer) {
-		return getFile(localPeer, fileExtension);
+	public File getFile() {
+		return getFile(fileExtension);
 	}
 
-	protected File getFile(LocalPeer localPeer, String ext) {
-		return new File(getDirectory(localPeer).getPath() + File.separatorChar + id
-				+ ext);
+	protected File getFile(String ext) {
+		return new File(localStore.getPath() + File.separatorChar + id + ext);
 	}
 
 	static public Id fileId(File checkFile) {
@@ -73,20 +74,16 @@ public class Peer extends PeerBase {
 		return null;
 	}
 
-	public File getDirectory(LocalPeer localPeer) {
-		return localPeer.getDirectory();
-	}
-
 	public File getChunkDirectory(LocalPeer localPeer) {
 
-		return new File(getDirectory(localPeer).getPath() + File.separatorChar + id);
+		return new File(localStore.getPath() + File.separatorChar + id);
 	}
 
 	// SERIALIZATION
 
-	public boolean persist(LocalPeer localPeer) {
+	public boolean persist() {
 		try {
-			FileOutputStream fos = new FileOutputStream(getFile(localPeer));
+			FileOutputStream fos = new FileOutputStream(getFile());
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
 			oos.writeObject(this);
 			oos.close();
@@ -98,9 +95,9 @@ public class Peer extends PeerBase {
 		}
 	}
 
-	public Peer restore(LocalPeer localPeer) {
+	public Peer restore() {
 		try {
-			FileInputStream fis = new FileInputStream(getFile(localPeer));
+			FileInputStream fis = new FileInputStream(getFile());
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			Object loaded = ois.readObject();
 			ois.close();
@@ -114,9 +111,9 @@ public class Peer extends PeerBase {
 		}
 		return null;
 	}
-	
-	public boolean writeChunkData(Chunk chunk, byte[] data, ChunkList toUpdate, LocalPeer localPeer)
-	{
+
+	public boolean writeChunkData(Chunk chunk, byte[] data, ChunkList toUpdate,
+			LocalPeer localPeer) {
 		try {
 			chunk.writeBytes(this, data, localPeer);
 		} catch (Exception e) {
@@ -126,8 +123,8 @@ public class Peer extends PeerBase {
 
 		toUpdate.set(chunk);
 
-		persist(localPeer);
-		
+		persist();
+
 		return true;
 	}
 }

@@ -35,6 +35,7 @@ import com.mjac.socialbackup.RandomisedId;
 import com.mjac.socialbackup.crypto.BouncyCastleGenerator;
 import com.mjac.socialbackup.crypto.KeystoreManager;
 import com.mjac.socialbackup.crypto.OpenTrustManager;
+import com.mjac.socialbackup.msg.StatusMessage;
 import com.mjac.socialbackup.services.Maintenance;
 import com.mjac.socialbackup.services.SslConnection;
 import com.mjac.socialbackup.services.SslServer;
@@ -80,8 +81,8 @@ public class LocalPeer extends Peer implements ChangeListener {
 
 	transient protected ChangeDispatcher changeDispatcher;
 
-	public LocalPeer(Id id) {
-		super(id);
+	public LocalPeer(Id id, File localStore) {
+		super(id, localStore);
 
 		// Service defaults!
 		alias = "";
@@ -89,6 +90,8 @@ public class LocalPeer extends Peer implements ChangeListener {
 		host = "";
 		port = defaultPort;
 		allocation = 100 << 20;
+		
+		this.directory = localStore;
 
 		connections = new ArrayList<SslConnection>();
 	}
@@ -97,17 +100,13 @@ public class LocalPeer extends Peer implements ChangeListener {
 		this.changeDispatcher = changeDispatcher;
 	}
 
-	public void setDirectory(File directory) {
-		this.directory = directory;
-	}
-
 	public File getDirectory() {
 		return directory;
 	}
 
 	@Override
-	public File getFile(LocalPeer localPeer) {
-		return getFile(localPeer, fileExtension);
+	public File getFile() {
+		return getFile(fileExtension);
 	}
 
 	static public Id fileId(File checkFile) {
@@ -185,7 +184,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 		}
 
 		backups.add(newBackup);
-		persist(this);
+		persist();
 
 		return true;
 	}
@@ -228,7 +227,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 		if (existingAlias == null) {
 			logger.trace("Key not assigned, adding to keystore");
 			// Not associated in keystore, generate new ID.
-			newPeer = new RemotePeer(new RandomisedId());
+			newPeer = new RemotePeer(new RandomisedId(), directory);
 			newPeer.setRemoteAllocation(remoteAllocation);
 
 			PublicKey existingKey = null;
@@ -256,7 +255,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 		} else {
 			// Associated in keystore, create peer.
 			logger.trace("Key already assigned to " + existingAlias);
-			newPeer = new RemotePeer(new Id(existingAlias));
+			newPeer = new RemotePeer(new Id(existingAlias), directory);
 			// Does the peer exist though or is it just in the keystore?
 		}
 
@@ -272,8 +271,8 @@ public class LocalPeer extends Peer implements ChangeListener {
 		// http://stackoverflow.com/questions/1669885/java-hashmap-duplicates
 		peers.put(newPeer.getId(), newPeer);
 
-		persist(this);
-		newPeer.persist(this);
+		persist();
+		newPeer.persist();
 
 		connectPeer(sslPeer, newPeer);
 
@@ -331,7 +330,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 
 				newPeer.startSender();
 				sslPeer.startReceiver(this);
-				newPeer.sendStatus(this);
+				newPeer.send(new StatusMessage(this));
 
 				changeDispatcher.stateChanged(new ChangeEvent(newPeer));
 				changeDispatcher.stateChanged(new ChangeEvent(sslPeer));
@@ -414,8 +413,8 @@ public class LocalPeer extends Peer implements ChangeListener {
 	// SYNCHRONISATION TO DISK
 
 	@Override
-	public LocalPeer restore(LocalPeer localPeer) {
-		Peer cp = super.restore(localPeer);
+	public LocalPeer restore() {
+		Peer cp = super.restore();
 		if (cp instanceof LocalPeer) {
 			return (LocalPeer) cp;
 		}
@@ -447,9 +446,9 @@ public class LocalPeer extends Peer implements ChangeListener {
 		}
 
 		for (Id clientId : peerIds) {
-			RemotePeer cp = new RemotePeer(clientId);
+			RemotePeer cp = new RemotePeer(clientId, directory);
 
-			RemotePeer cpRestored = cp.restore(this);
+			RemotePeer cpRestored = cp.restore();
 			if (cpRestored == null) {
 				logger.warn("Could not restore client " + clientId);
 			} else {
@@ -531,7 +530,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 			}
 
 			writeChunkData(chunk, data, chunks, this);
-			persist(this);
+			persist();
 			return true;
 		}
 

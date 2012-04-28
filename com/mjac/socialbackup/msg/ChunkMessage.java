@@ -6,7 +6,6 @@ import java.io.ObjectOutputStream;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
-import com.mjac.socialbackup.Daemon;
 import com.mjac.socialbackup.state.Chunk;
 import com.mjac.socialbackup.state.LocalPeer;
 import com.mjac.socialbackup.state.Peer;
