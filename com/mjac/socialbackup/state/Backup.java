@@ -18,6 +18,8 @@ import org.joda.time.DateTime;
 
 import com.mjac.socialbackup.Id;
 import com.mjac.socialbackup.RandomisedId;
+import com.mjac.socialbackup.actors.LocalUser;
+import com.mjac.socialbackup.actors.User;
 import com.mjac.socialbackup.crypto.Hasher;
 
 public class Backup implements Serializable {
@@ -84,7 +86,7 @@ public class Backup implements Serializable {
 		}
 	}
 
-	public boolean readToStream(LocalPeer user, OutputStream os)
+	public boolean readToStream(LocalUser user, OutputStream os)
 			throws IOException {
 		ChunkList localStore = user.getChunkList();
 		for (Id chunkId : chunkIds) {
@@ -112,7 +114,7 @@ public class Backup implements Serializable {
 		return true;
 	}
 
-	public boolean read(LocalPeer user, File outputFile) {
+	public boolean read(LocalUser user, File outputFile) {
 		try {
 			FileOutputStream fos = new FileOutputStream(outputFile);
 			readToStream(user, fos);
@@ -132,7 +134,7 @@ public class Backup implements Serializable {
 		return hashBytes;
 	}
 
-	public boolean write(LocalPeer user) {
+	public boolean write(LocalUser user) {
 		try {
 			byte[] hash = hash();
 			logger.trace("Hashed to " + Hex.encodeHexString(hash));
@@ -149,7 +151,7 @@ public class Backup implements Serializable {
 		return false;
 	}
 
-	public boolean write(InputStream is, LocalPeer user, byte[] hash) {
+	public boolean write(InputStream is, LocalUser user, byte[] hash) {
 		try {
 			DateTime written = new DateTime();
 
@@ -189,7 +191,7 @@ public class Backup implements Serializable {
 		}
 	}
 
-	private boolean addChunksToPeer(Peer peer, ArrayList<Chunk> newChunks) {
+	private boolean addChunksToPeer(User peer, ArrayList<Chunk> newChunks) {
 		ChunkList peerStore = peer.getChunkList();
 		for (Chunk chunk : newChunks) {
 			if (peerStore.has(chunk)) {

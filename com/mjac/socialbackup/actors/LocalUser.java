@@ -1,4 +1,4 @@
-package com.mjac.socialbackup.state;
+package com.mjac.socialbackup.actors;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -45,13 +45,18 @@ import com.mjac.socialbackup.msg.StatusMessage;
 import com.mjac.socialbackup.services.Maintenance;
 import com.mjac.socialbackup.services.SslConnection;
 import com.mjac.socialbackup.services.SslServer;
+import com.mjac.socialbackup.state.Backup;
+import com.mjac.socialbackup.state.BackupStrategy;
+import com.mjac.socialbackup.state.Chunk;
+import com.mjac.socialbackup.state.ChunkData;
+import com.mjac.socialbackup.state.ChunkList;
 import com.mjac.socialbackup.state.BackupStrategy.ChunkComparer;
 
 /** Has a private key associated */
-public class LocalPeer extends Peer implements ChangeListener {
+public class LocalUser extends User implements ChangeListener {
 	static private final long serialVersionUID = 1L;
 
-	static private final Logger logger = Logger.getLogger(LocalPeer.class);
+	static private final Logger logger = Logger.getLogger(LocalUser.class);
 
 	static public final int defaultPort = 134;
 
@@ -71,7 +76,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 	protected BackupStrategy strategy = new BackupStrategy();
 
 	/** Clients that we have information for. */
-	transient protected Map<Id, RemotePeer> peers = new HashMap<Id, RemotePeer>();
+	transient protected Map<Id, RemoteUser> peers = new HashMap<Id, RemoteUser>();
 
 	/** List of known clients. Only used for serialization. */
 	protected ArrayList<Id> peerIds = new ArrayList<Id>();
@@ -87,7 +92,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 
 	transient protected ChangeDispatcher changeDispatcher;
 
-	public LocalPeer(Id id, File localStore) {
+	public LocalUser(Id id, File localStore) {
 		super(id, localStore);
 
 		// Service defaults!
@@ -201,7 +206,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 
 	// PEER CONNECTIONS
 
-	public Collection<RemotePeer> getPeers() {
+	public Collection<RemoteUser> getPeers() {
 		return peers.values();
 	}
 
@@ -224,16 +229,16 @@ public class LocalPeer extends Peer implements ChangeListener {
 		}
 	}
 
-	public RemotePeer createPeer(SslConnection sslPeer, long remoteAllocation) {
+	public RemoteUser createPeer(SslConnection sslPeer, long remoteAllocation) {
 		PublicKey publicKey = sslPeer.getPublicKey();
 		String existingAlias = keystoreManager.getRawId(publicKey);
 
-		RemotePeer newPeer = null;
+		RemoteUser newPeer = null;
 
 		if (existingAlias == null) {
 			logger.trace("Key not assigned, adding to keystore");
 			// Not associated in keystore, generate new ID.
-			newPeer = new RemotePeer(new RandomisedId(), directory);
+			newPeer = new RemoteUser(new RandomisedId(), directory);
 			newPeer.setRemoteAllocation(remoteAllocation);
 
 			PublicKey existingKey = null;
@@ -261,11 +266,11 @@ public class LocalPeer extends Peer implements ChangeListener {
 		} else {
 			// Associated in keystore, create peer.
 			logger.trace("Key already assigned to " + existingAlias);
-			newPeer = new RemotePeer(new Id(existingAlias), directory);
+			newPeer = new RemoteUser(new Id(existingAlias), directory);
 			// Does the peer exist though or is it just in the keystore?
 		}
 
-		RemotePeer alreadyAssigned = peers.get(newPeer.getId());
+		RemoteUser alreadyAssigned = peers.get(newPeer.getId());
 		if (alreadyAssigned != null) {
 			logger.warn("ID already assigned to peer - already a peer associated");
 			return null;
@@ -315,7 +320,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 				return false;
 			}
 
-			RemotePeer newPeer = peers.get(peerId);
+			RemoteUser newPeer = peers.get(peerId);
 
 			if (newPeer == null) {
 				logger.warn("Peer missing for recognised key, treating as SSL peer");
@@ -411,11 +416,11 @@ public class LocalPeer extends Peer implements ChangeListener {
 	// SYNCHRONISATION TO DISK
 
 	@Override
-	public LocalPeer restore() throws IOException, ClassNotFoundException {
-		Peer cp = super.restore();
+	public LocalUser restore() throws IOException, ClassNotFoundException {
+		User cp = super.restore();
 
-		if (cp instanceof LocalPeer) {
-			LocalPeer localPeer = (LocalPeer) cp;
+		if (cp instanceof LocalUser) {
+			LocalUser localPeer = (LocalUser) cp;
 			localPeer.directory = directory;
 			localPeer.localStore = localStore;
 			return localPeer;
@@ -427,7 +432,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 	private void writeObject(ObjectOutputStream out) throws IOException,
 			ClassNotFoundException {
 		peerIds = new ArrayList<Id>();
-		for (RemotePeer cp : peers.values()) {
+		for (RemoteUser cp : peers.values()) {
 			peerIds.add(cp.getId());
 		}
 
@@ -439,7 +444,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 		in.defaultReadObject();
 
 		connections = new ArrayList<SslConnection>();
-		peers = new HashMap<Id, RemotePeer>();
+		peers = new HashMap<Id, RemoteUser>();
 	}
 
 	public void restoreClients() {
@@ -449,9 +454,9 @@ public class LocalPeer extends Peer implements ChangeListener {
 		}
 
 		for (Id clientId : peerIds.toArray(new Id[]{})) {
-			RemotePeer cp = new RemotePeer(clientId, directory);
+			RemoteUser cp = new RemoteUser(clientId, directory);
 
-			RemotePeer cpRestored;
+			RemoteUser cpRestored;
 			try {
 				cpRestored = cp.restore();
 				peers.put(cpRestored.getId(), cpRestored);
@@ -550,7 +555,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 	/**
 	 * Connect user to another Social Backup system through an SSL connection.
 	 */
-	public boolean connect(PeerBase targetPeer) {
+	public boolean connect(Peer targetPeer) {
 		SslConnection sslConn = createSslConnection();
 		sslConn.setValidHostPort(targetPeer.getHost(), targetPeer.getPort());
 
@@ -598,14 +603,14 @@ public class LocalPeer extends Peer implements ChangeListener {
 		logger.trace(comparer);
 
 		// Collection<RemotePeer> remotePeers = user.getPeers();
-		HashMap<RemotePeer, ChunkList> newChunkLists = new HashMap<RemotePeer, ChunkList>();
+		HashMap<RemoteUser, ChunkList> newChunkLists = new HashMap<RemoteUser, ChunkList>();
 
 		for (ChunkComparer cc : comparer) {
 			if (cc.getSuitability() <= 0.0) {
 				continue;
 			}
 
-			RemotePeer remotePeer = cc.getPeer();
+			RemoteUser remotePeer = cc.getPeer();
 			ChunkList chunkList = newChunkLists.get(remotePeer);
 			if (chunkList == null) {
 				chunkList = new ChunkList();
@@ -618,7 +623,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 			}
 		}
 
-		for (Entry<RemotePeer, ChunkList> entry : newChunkLists.entrySet()) {
+		for (Entry<RemoteUser, ChunkList> entry : newChunkLists.entrySet()) {
 			entry.getKey().setChunkList(entry.getValue());
 			logger.trace(entry.getKey().getAlias() + " now contains: "
 					+ entry.getValue());
@@ -627,12 +632,12 @@ public class LocalPeer extends Peer implements ChangeListener {
 
 	/** Check to see if peers have messages to send or needs sync. */
 	public void syncAllPeers() {
-		for (RemotePeer peer : getPeers()) {
+		for (RemoteUser peer : getPeers()) {
 			syncPeer(peer);
 		}
 	}
 
-	public void syncPeer(RemotePeer peer) {
+	public void syncPeer(RemoteUser peer) {
 		if (peer.needsChunkListing(getListDuration())) {
 			peer.sendChunkListing();
 		}
@@ -646,8 +651,8 @@ public class LocalPeer extends Peer implements ChangeListener {
 		}
 	}
 
-	public boolean isConnectedTo(RemotePeer remotePeer) {
-		for (RemotePeer checkPeer : getPeers()) {
+	public boolean isConnectedTo(RemoteUser remotePeer) {
+		for (RemoteUser checkPeer : getPeers()) {
 			if (remotePeer.getHost().equals(checkPeer.getHost())
 					&& remotePeer.getPort() == checkPeer.getPort()
 					&& checkPeer.isHandled()) {
@@ -667,7 +672,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 		return true;
 	}
 
-	public void receive(Message message, RemotePeer peer) {
+	public void receive(Message message, RemoteUser peer) {
 		logger.trace("@" + getAlias() + " <- "
 				+ message.getClass().getSimpleName() + " <- " + peer.getAlias());
 
@@ -682,27 +687,27 @@ public class LocalPeer extends Peer implements ChangeListener {
 		}
 	}
 
-	public void receiveLists(ChunkListMessage message, RemotePeer peer) {
+	public void receiveLists(ChunkListMessage message, RemoteUser peer) {
 		peer.tracker.syncReceived();
 		syncReceiverList(message.getReceiverChunks(), peer);
 		syncSenderList(message.getSenderChunks(), peer);
 	}
 	
-	private void syncSenderList(ChunkList senderChunks, RemotePeer peer) {
+	private void syncSenderList(ChunkList senderChunks, RemoteUser peer) {
 		ChunkList compare = senderChunks.missing(peer.remoteChunks);
 		for (Chunk chunk : compare.getChunks()) {
 			peer.send(new ChunkReturnMessage(chunk, this));
 		}
 	}
 
-	private void syncReceiverList(ChunkList receiverChunks, RemotePeer peer) {
+	private void syncReceiverList(ChunkList receiverChunks, RemoteUser peer) {
 		ChunkList compare = receiverChunks.missing(peer.chunks);
 		for (Chunk chunk : compare.getChunks()) {
 			peer.send(new ChunkSendMessage(chunk, this));
 		}
 	}
 	
-	public boolean receiveChunk(ChunkMessage message, RemotePeer peer) {
+	public boolean receiveChunk(ChunkMessage message, RemoteUser peer) {
 		Chunk chunk = message.getChunk();
 		byte[] data = message.getData();
 

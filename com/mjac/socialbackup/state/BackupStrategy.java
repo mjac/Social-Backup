@@ -4,20 +4,22 @@ import java.io.Serializable;
 import java.util.PriorityQueue;
 
 import com.mjac.socialbackup.Id;
+import com.mjac.socialbackup.actors.LocalUser;
+import com.mjac.socialbackup.actors.RemoteUser;
 
 public class BackupStrategy implements Serializable {
 	public class ChunkComparer implements Comparable<ChunkComparer> {
-		protected RemotePeer peer;
+		protected RemoteUser peer;
 		protected Chunk chunk;
 		protected double suitability;
 
-		public ChunkComparer(RemotePeer peer, Chunk chunk, double suitability) {
+		public ChunkComparer(RemoteUser peer, Chunk chunk, double suitability) {
 			this.peer = peer;
 			this.chunk = chunk;
 			this.suitability = suitability;
 		}
 
-		public RemotePeer getPeer() {
+		public RemoteUser getPeer() {
 			return peer;
 		}
 
@@ -49,7 +51,7 @@ public class BackupStrategy implements Serializable {
 	}
 
 	/** Create a priority queue. */
-	public void place(Backup backup, LocalPeer user,
+	public void place(Backup backup, LocalUser user,
 			PriorityQueue<ChunkComparer> comparer) {
 		ChunkList localStore = user.getChunkList();
 		for (Id chunkId : backup.getChunkIds()) {
@@ -58,7 +60,7 @@ public class BackupStrategy implements Serializable {
 				continue;
 			}
 
-			for (RemotePeer peer : user.getPeers()) {
+			for (RemoteUser peer : user.getPeers()) {
 				Double suitability = suitability(peer, user, backup, chunk);
 				comparer.add(new ChunkComparer(peer, chunk, suitability));
 			}
@@ -69,18 +71,18 @@ public class BackupStrategy implements Serializable {
 	 * Determine the suitability of peer for storing a chunk, associated with a
 	 * backup, owned by a user.
 	 */
-	public double suitability(RemotePeer peer, LocalPeer user, Backup backup,
+	public double suitability(RemoteUser peer, LocalUser user, Backup backup,
 			Chunk chunk) {
 		return suitability(peer, user, backup) * suitability(peer, user, chunk);
 	}
 
 	/** Determine the suitability of peer for storing a backup owned by a user. */
-	public double suitability(RemotePeer peer, LocalPeer user, Backup backup) {
+	public double suitability(RemoteUser peer, LocalUser user, Backup backup) {
 		return 1.0;
 	}
 
 	/** Determine the suitability of peer for storing a chunk owned by a user. */
-	public double suitability(RemotePeer peer, LocalPeer user, Chunk chunk) {
+	public double suitability(RemoteUser peer, LocalUser user, Chunk chunk) {
 		// Determining if peer has chunk is done later
 		// if (peer.hasChunk(chunk.getId())) {
 		// return 0.0;

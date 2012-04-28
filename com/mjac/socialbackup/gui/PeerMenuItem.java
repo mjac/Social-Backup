@@ -3,18 +3,18 @@ package com.mjac.socialbackup.gui;
 import java.awt.Font;
 import java.awt.MenuItem;
 
-import com.mjac.socialbackup.state.RemotePeer;
+import com.mjac.socialbackup.actors.RemoteUser;
 
 @SuppressWarnings("serial")
 public class PeerMenuItem extends MenuItem {
-	private RemotePeer peer;
+	private RemoteUser peer;
 
-	public PeerMenuItem(RemotePeer peer) {
+	public PeerMenuItem(RemoteUser peer) {
 		this.peer = peer;
 		update();
 	}
 
-	public RemotePeer getAssociatedPeer() {
+	public RemoteUser getAssociatedPeer() {
 		return peer;
 	}
 

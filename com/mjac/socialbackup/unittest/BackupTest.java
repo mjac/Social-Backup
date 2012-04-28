@@ -18,13 +18,13 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.mjac.socialbackup.RandomisedId;
+import com.mjac.socialbackup.actors.LocalUser;
 import com.mjac.socialbackup.crypto.KeystoreManager;
 import com.mjac.socialbackup.state.Backup;
-import com.mjac.socialbackup.state.LocalPeer;
 import com.mjac.socialbackup.test.Profiler;
 
 public class BackupTest {
-	public static LocalPeer localPeer;
+	public static LocalUser localPeer;
 	public static Random random = new Random();
 	public static File dir = new File("backuptest");
 
@@ -32,7 +32,7 @@ public class BackupTest {
 	public static void setUpBeforeClass() throws Exception {
 		Security.addProvider(new BouncyCastleProvider());
 		dir.mkdir();
-		localPeer = new LocalPeer(new RandomisedId(), dir);
+		localPeer = new LocalUser(new RandomisedId(), dir);
 		KeystoreManager km = new KeystoreManager(new File(dir.getAbsolutePath()
 				+ File.separatorChar + "keystore.bks"), new char[] {});
 		km.blank();

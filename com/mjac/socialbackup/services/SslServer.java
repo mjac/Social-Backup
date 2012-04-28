@@ -15,17 +15,17 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.mjac.socialbackup.ChangeDispatcher;
-import com.mjac.socialbackup.state.LocalPeer;
+import com.mjac.socialbackup.actors.LocalUser;
 
 public class SslServer extends Thread {
 	private static final Logger logger = Logger.getLogger(SslServer.class);
 
 	SSLServerSocket sock;
 
-	protected LocalPeer localPeer;
+	protected LocalUser localPeer;
 	protected ChangeDispatcher changeDispatcher;
 
-	public SslServer(LocalPeer servicePeer, ChangeDispatcher changeDispatcher)
+	public SslServer(LocalUser servicePeer, ChangeDispatcher changeDispatcher)
 			throws Exception {
 		this.localPeer = servicePeer;
 		this.changeDispatcher = changeDispatcher;

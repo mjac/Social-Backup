@@ -4,9 +4,9 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Duration;
 
-import com.mjac.socialbackup.state.LocalPeer;
-import com.mjac.socialbackup.state.PeerTracker;
-import com.mjac.socialbackup.state.RemotePeer;
+import com.mjac.socialbackup.PeerTracker;
+import com.mjac.socialbackup.actors.LocalUser;
+import com.mjac.socialbackup.actors.RemoteUser;
 
 public class Maintenance extends Thread {
 	private static final Logger logger = Logger.getLogger(Maintenance.class);
@@ -20,9 +20,9 @@ public class Maintenance extends Thread {
 
 	private boolean running = true;
 
-	protected LocalPeer user;
+	protected LocalUser user;
 
-	public Maintenance(LocalPeer user) {
+	public Maintenance(LocalUser user) {
 		this.user = user;
 	}
 
@@ -73,7 +73,7 @@ public class Maintenance extends Thread {
 			return true;
 		}
 
-		RemotePeer peer = sslConn.getPeer();
+		RemoteUser peer = sslConn.getPeer();
 		if (peer != null) {
 			PeerTracker tracker = peer.getTracker();
 			if (tracker.getLastSent().isAfter(cutoffDate)

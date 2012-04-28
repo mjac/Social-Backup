@@ -6,8 +6,8 @@ import java.io.ObjectOutputStream;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
+import com.mjac.socialbackup.actors.User;
 import com.mjac.socialbackup.state.Chunk;
-import com.mjac.socialbackup.state.Peer;
 
 /** A lazy chunk transfer device. */
 abstract public class ChunkMessage extends PeerMessage {
@@ -18,11 +18,11 @@ abstract public class ChunkMessage extends PeerMessage {
 	public Chunk chunk;
 	public byte[] data;
 
-	private transient Peer peer;
+	private transient User user;
 
-	public ChunkMessage(Chunk chunk, Peer peer) {
+	public ChunkMessage(Chunk chunk, User user) {
 		this.chunk = chunk;
-		this.peer = peer;
+		this.user = user;
 	}
 
 	public Chunk getChunk() {
@@ -41,7 +41,7 @@ abstract public class ChunkMessage extends PeerMessage {
 
 	private void writeObject(ObjectOutputStream out) throws IOException,
 			ClassNotFoundException {
-		data = chunk.getEncryptedData(peer);
+		data = chunk.getEncryptedData(user);
 		logger.info("sent " + chunk.getOutputSize() + " " + new DateTime().getMillis());
 		out.defaultWriteObject();
 	}

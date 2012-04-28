@@ -1,4 +1,4 @@
-package com.mjac.socialbackup.state;
+package com.mjac.socialbackup.actors;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,11 +16,13 @@ import com.mjac.socialbackup.msg.ChunkSendMessage;
 import com.mjac.socialbackup.msg.Message;
 import com.mjac.socialbackup.msg.StatusMessage;
 import com.mjac.socialbackup.services.SslConnection;
+import com.mjac.socialbackup.state.Chunk;
+import com.mjac.socialbackup.state.ChunkList;
 
-public class RemotePeer extends Peer {
+public class RemoteUser extends User {
 	private static final long serialVersionUID = 1L;
 
-	private static final Logger logger = Logger.getLogger(RemotePeer.class);
+	private static final Logger logger = Logger.getLogger(RemoteUser.class);
 
 	private static final String fileExtension = ".remote";
 
@@ -38,7 +40,7 @@ public class RemotePeer extends Peer {
 	/** Allocation to the remote peer. */
 	protected long remoteAllocation = 0L;
 
-	public RemotePeer(Id id, File localStore) {
+	public RemoteUser(Id id, File localStore) {
 		super(id, localStore);
 	}
 
@@ -170,11 +172,11 @@ public class RemotePeer extends Peer {
 	// SYNC TO DISK
 
 	@Override
-	public RemotePeer restore() throws IOException, ClassNotFoundException {
-		Peer cp = super.restore();
+	public RemoteUser restore() throws IOException, ClassNotFoundException {
+		User cp = super.restore();
 
-		if (cp instanceof RemotePeer) {
-			return (RemotePeer) cp;
+		if (cp instanceof RemoteUser) {
+			return (RemoteUser) cp;
 		}
 
 		throw new IOException("Invalid remote peer type");

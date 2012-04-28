@@ -18,11 +18,11 @@ import org.junit.Test;
 
 import com.mjac.socialbackup.ChangeDispatcher;
 import com.mjac.socialbackup.RandomisedId;
+import com.mjac.socialbackup.actors.LocalUser;
+import com.mjac.socialbackup.actors.RemoteUser;
 import com.mjac.socialbackup.crypto.KeystoreManager;
 import com.mjac.socialbackup.services.SslConnection;
 import com.mjac.socialbackup.state.Backup;
-import com.mjac.socialbackup.state.LocalPeer;
-import com.mjac.socialbackup.state.RemotePeer;
 
 public class NetworkTest {
 	public static File dir = new File("networktest");
@@ -43,9 +43,9 @@ public class NetworkTest {
 		FileUtils.deleteDirectory(dir);
 	}
 
-	private LocalPeer you;
+	private LocalUser you;
 
-	private LocalPeer me;
+	private LocalUser me;
 
 	private String backupText = "Hi, this is my first backup!";
 
@@ -55,12 +55,12 @@ public class NetworkTest {
 		you = createRandomPeer(1);
 	}
 
-	private LocalPeer createRandomPeer(int peerIndex) throws Exception {
+	private LocalUser createRandomPeer(int peerIndex) throws Exception {
 		RandomisedId id = new RandomisedId();
 		File peerDir = new File(dir.getAbsolutePath() + File.separatorChar + id);
 		peerDir.mkdir();
 
-		LocalPeer localPeer = new LocalPeer(id, peerDir);
+		LocalUser localPeer = new LocalUser(id, peerDir);
 
 		KeystoreManager km = new KeystoreManager(
 				new File(peerDir.getAbsolutePath() + File.separatorChar
@@ -104,12 +104,12 @@ public class NetworkTest {
 
 		Assert.assertTrue(me.connect(you));
 
-		RemotePeer meInYou = you.createPeer(
+		RemoteUser meInYou = you.createPeer(
 				me.getConnections().toArray(new SslConnection[] {})[0], 100);
 		Assert.assertTrue(meInYou.isHandled());
 		Assert.assertTrue(you.isConnectedTo(meInYou));
 
-		RemotePeer youInMe = me.createPeer(
+		RemoteUser youInMe = me.createPeer(
 				you.getConnections().toArray(new SslConnection[] {})[0], 100);
 		Assert.assertTrue(youInMe.isHandled());
 		Assert.assertTrue(me.isConnectedTo(youInMe));

@@ -19,16 +19,16 @@ import javax.swing.event.ChangeEvent;
 
 import org.apache.log4j.Logger;
 
+import com.mjac.socialbackup.actors.LocalUser;
 import com.mjac.socialbackup.state.Backup;
-import com.mjac.socialbackup.state.LocalPeer;
 
 @SuppressWarnings("serial")
 public class FileDialog extends MutableDialog {
 	private static final Logger logger = Logger.getLogger(FileDialog.class);
 
-	LocalPeer servicePeer;
+	LocalUser servicePeer;
 
-	public FileDialog(LocalPeer servicePeer) {
+	public FileDialog(LocalUser servicePeer) {
 		super((JFrame) null, "Backed up files");
 		this.servicePeer = servicePeer;
 		logger.trace("Updating");

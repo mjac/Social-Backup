@@ -1,6 +1,6 @@
 package com.mjac.socialbackup.msg;
 
-import com.mjac.socialbackup.state.PeerBase;
+import com.mjac.socialbackup.actors.Peer;
 
 /** Hints at properties of the peer, without authority. */
 public class StatusMessage extends Message {
@@ -23,7 +23,7 @@ public class StatusMessage extends Message {
 		this.allocation = allocation;
 	}
 
-	public StatusMessage(PeerBase localPeer) {
+	public StatusMessage(Peer localPeer) {
 		this.alias = localPeer.getAlias();
 		this.email = localPeer.getEmail();
 		this.host = localPeer.getHost();

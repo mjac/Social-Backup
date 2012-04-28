@@ -1,14 +1,11 @@
-package com.mjac.socialbackup.state;
+package com.mjac.socialbackup.actors;
 
-import java.io.Serializable;
 import java.net.InetSocketAddress;
 
 import com.mjac.socialbackup.email.EmailAddress;
 import com.mjac.socialbackup.msg.StatusMessage;
 
-public class PeerBase implements Serializable {	
-	private static final long serialVersionUID = 1L;
-
+public class Peer {
 	protected String alias = "Anonymous";
 	protected String email = "";
 	protected String host = "";
@@ -79,7 +76,7 @@ public class PeerBase implements Serializable {
 	}
 
 	/** Copy peer status from ssl status in initial creation (for instance). */
-	public void copyStatus(PeerBase pb) {
+	public void copyStatus(Peer pb) {
 		alias = pb.alias;
 		email = pb.email;
 		host = pb.host;

@@ -13,8 +13,8 @@ import javax.swing.GroupLayout.Group;
 import javax.swing.event.ChangeEvent;
 
 import com.mjac.socialbackup.ChangeDispatcher;
-import com.mjac.socialbackup.state.RemotePeer;
-import com.mjac.socialbackup.state.LocalPeer;
+import com.mjac.socialbackup.actors.LocalUser;
+import com.mjac.socialbackup.actors.RemoteUser;
 
 @SuppressWarnings("serial")
 public class PeerDialog extends MutableDialog {
@@ -25,22 +25,22 @@ public class PeerDialog extends MutableDialog {
 	private JTextField allocTextField;
 	private boolean allocTextFieldChanged;
 
-	protected LocalPeer servicePeer;
+	protected LocalUser servicePeer;
 	protected ChangeDispatcher changeDispatcher;
 
-	private RemotePeer client;
+	private RemoteUser client;
 
 	private JTextField allocUsedTextField;
 	private JTextField allocRemoteTextField;
 
-	public PeerDialog(LocalPeer servicePeer,
-			ChangeDispatcher changeDispatcher, RemotePeer newClient) {
+	public PeerDialog(LocalUser servicePeer,
+			ChangeDispatcher changeDispatcher, RemoteUser newClient) {
 		super((JFrame) null, "Edit friend");
 		this.client = newClient;
 		dialogSetup(servicePeer, changeDispatcher);
 	}
 
-	private void dialogSetup(LocalPeer servicePeer,
+	private void dialogSetup(LocalUser servicePeer,
 			ChangeDispatcher changeDispatcher) {
 		this.servicePeer = servicePeer;
 		this.changeDispatcher = changeDispatcher;
@@ -63,7 +63,7 @@ public class PeerDialog extends MutableDialog {
 		hostDescription.setRows(1);
 
 		JLabel portLabel = new JLabel("Port");
-		portTextField = new JTextField(LocalPeer.defaultPort);
+		portTextField = new JTextField(LocalUser.defaultPort);
 		JTextArea portDescription = new TextNote("Your friend's internet port.");
 		portDescription.setRows(1);
 
@@ -185,7 +185,7 @@ public class PeerDialog extends MutableDialog {
 	@Override
 	public void stateChanged(ChangeEvent ce) {
 		Object s = ce.getSource();
-		if (s instanceof RemotePeer) {
+		if (s instanceof RemoteUser) {
 			if (s == client) {
 				updateGui();
 			}

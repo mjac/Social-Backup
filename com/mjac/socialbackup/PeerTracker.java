@@ -1,4 +1,4 @@
-package com.mjac.socialbackup.state;
+package com.mjac.socialbackup;
 
 import java.io.IOException;
 import java.io.Serializable;
@@ -8,8 +8,10 @@ import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.ReadableDuration;
 
-import com.mjac.socialbackup.Id;
+import com.mjac.socialbackup.actors.LocalUser;
+import com.mjac.socialbackup.actors.RemoteUser;
 import com.mjac.socialbackup.msg.ChunkMessage;
+import com.mjac.socialbackup.state.Chunk;
 
 public class PeerTracker implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -64,7 +66,7 @@ public class PeerTracker implements Serializable {
 	}
 
 	/** Test the user by requesting a random chunk they should have. */
-	public Id createChallenge(RemotePeer peer) {
+	public Id createChallenge(RemoteUser peer) {
 		Id[] chunkIds = peer.getChunkList().getIds().toArray(new Id[] {});
 		Random rng = new Random();
 		int rngInt = rng.nextInt();
@@ -72,8 +74,8 @@ public class PeerTracker implements Serializable {
 		return challengeChunkId;
 	}
 
-	public void checkChallenge(ChunkMessage chunkContent, RemotePeer peer,
-			LocalPeer user) {
+	public void checkChallenge(ChunkMessage chunkContent, RemoteUser peer,
+			LocalUser user) {
 		try {
 			if (challengeChunkId == null
 					|| !chunkContent.getChunk().getId()

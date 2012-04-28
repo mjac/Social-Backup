@@ -23,15 +23,15 @@ import org.apache.commons.lang.StringUtils;
 
 import com.mjac.socialbackup.ChangeDispatcher;
 import com.mjac.socialbackup.Daemon;
+import com.mjac.socialbackup.actors.LocalUser;
+import com.mjac.socialbackup.actors.RemoteUser;
 import com.mjac.socialbackup.email.Emailer;
 import com.mjac.socialbackup.services.SslConnection;
 import com.mjac.socialbackup.services.SslServer;
 import com.mjac.socialbackup.state.Backup;
-import com.mjac.socialbackup.state.LocalPeer;
-import com.mjac.socialbackup.state.RemotePeer;
 
 public class TrayInterface extends TrayIcon implements ChangeListener {
-	protected LocalPeer localPeer;
+	protected LocalUser localPeer;
 	protected ChangeDispatcher changeDispatcher;
 
 	protected Menu connectionMenu = new Menu("Friend requests");
@@ -47,7 +47,7 @@ public class TrayInterface extends TrayIcon implements ChangeListener {
 
 	final static int friendRequestDelay = 1000;
 
-	public TrayInterface(LocalPeer user, ChangeDispatcher changeDispatcher) {
+	public TrayInterface(LocalUser user, ChangeDispatcher changeDispatcher) {
 		super(loadingImage());
 
 		this.localPeer = user;
@@ -223,10 +223,10 @@ public class TrayInterface extends TrayIcon implements ChangeListener {
 		return serviceMenu;
 	}
 
-	private MenuItem peerMenuItem(RemotePeer clientPeer) {
+	private MenuItem peerMenuItem(RemoteUser clientPeer) {
 		PeerMenuItem newPeerMenuItem = new PeerMenuItem(clientPeer);
 
-		final RemotePeer clientRef = clientPeer;
+		final RemoteUser clientRef = clientPeer;
 
 		newPeerMenuItem.addActionListener(new ActionListener() {
 			@Override
@@ -241,13 +241,13 @@ public class TrayInterface extends TrayIcon implements ChangeListener {
 		return newPeerMenuItem;
 	}
 
-	private void fillPeers(Collection<RemotePeer> collection) {
-		for (RemotePeer peer : collection) {
+	private void fillPeers(Collection<RemoteUser> collection) {
+		for (RemoteUser peer : collection) {
 			friendMenu.add(peerMenuItem(peer));
 		}
 	}
 
-	private void updatePeers(RemotePeer changedPeer) {
+	private void updatePeers(RemoteUser changedPeer) {
 		for (int i = friendMenu.getItemCount() - 1; i >= 0; --i) {
 			MenuItem menuItem = friendMenu.getItem(i);
 
@@ -380,12 +380,12 @@ public class TrayInterface extends TrayIcon implements ChangeListener {
 		} else if (s instanceof SslConnection) {
 			updateSslPeers((SslConnection) s);
 			sslPeerDialogs.stateChanged(ce);
-		} else if (s instanceof LocalPeer) {
+		} else if (s instanceof LocalUser) {
 			if (s == localPeer) {
 				setTitles();
 			}
-		} else if (s instanceof RemotePeer) {
-			updatePeers((RemotePeer) s);
+		} else if (s instanceof RemoteUser) {
+			updatePeers((RemoteUser) s);
 			peerDialogs.stateChanged(ce);
 		}
 	}

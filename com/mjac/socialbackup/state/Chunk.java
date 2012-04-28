@@ -13,6 +13,7 @@ import java.security.GeneralSecurityException;
 import org.apache.log4j.Logger;
 
 import com.mjac.socialbackup.Id;
+import com.mjac.socialbackup.actors.User;
 
 /** Just a data store. */
 public class Chunk implements Serializable {
@@ -56,12 +57,12 @@ public class Chunk implements Serializable {
 		return other.id == id;
 	}
 
-	public File getFile(Peer peer) {
+	public File getFile(User peer) {
 		File chunkDir = peer.getChunkDirectory();
 		return new File(chunkDir.getPath() + File.separatorChar + id.toString());
 	}
 
-	public OutputStream getOutputStream(Peer peer) {
+	public OutputStream getOutputStream(User peer) {
 		File peerFile = getFile(peer);
 		try {
 			return new FileOutputStream(peerFile);
@@ -82,7 +83,7 @@ public class Chunk implements Serializable {
 		}
 	}
 
-	public InputStream getInputStream(Peer peer) throws IOException {
+	public InputStream getInputStream(User peer) throws IOException {
 		File chunkFile = getFile(peer);
 		if (chunkFile == null) {
 			return null;
@@ -92,7 +93,7 @@ public class Chunk implements Serializable {
 	}
 
 	/** Write a raw chunk to a peer. */
-	public void writeBytes(Peer peer, byte[] data)
+	public void writeBytes(User peer, byte[] data)
 			throws GeneralSecurityException, IOException {
 		OutputStream os = getOutputStream(peer);
 		os.write(data);
@@ -104,7 +105,7 @@ public class Chunk implements Serializable {
 	 * 
 	 * @throws IOException
 	 */
-	public byte[] getEncryptedData(Peer peer) throws IOException {
+	public byte[] getEncryptedData(User peer) throws IOException {
 		InputStream fis = getInputStream(peer);
 		byte[] allBytes = new byte[fis.available()];
 		fis.read(allBytes);

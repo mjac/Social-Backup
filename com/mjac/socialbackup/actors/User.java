@@ -1,22 +1,24 @@
-package com.mjac.socialbackup.state;
+package com.mjac.socialbackup.actors;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.Serializable;
 
 import org.apache.log4j.Logger;
 
 import com.mjac.socialbackup.Id;
-import com.mjac.socialbackup.msg.ChunkSendMessage;
+import com.mjac.socialbackup.PeerTracker;
+import com.mjac.socialbackup.state.Chunk;
+import com.mjac.socialbackup.state.ChunkList;
 
-public class Peer extends PeerBase {
+public class User extends Peer implements Serializable {
 	private static final long serialVersionUID = 1L;
 
-	private static final Logger logger = Logger.getLogger(Peer.class);
+	private static final Logger logger = Logger.getLogger(User.class);
 
 	private static final String fileExtension = ".peer";
 
@@ -35,7 +37,7 @@ public class Peer extends PeerBase {
 
 	protected transient File localStore;
 
-	public Peer(Id id, File localStore) {
+	public User(Id id, File localStore) {
 		this.id = id;
 		this.localStore = localStore;
 	}
@@ -98,13 +100,13 @@ public class Peer extends PeerBase {
 		}
 	}
 
-	public Peer restore() throws IOException, ClassNotFoundException {
+	public User restore() throws IOException, ClassNotFoundException {
 		FileInputStream fis = new FileInputStream(getFile());
 		ObjectInputStream ois = new ObjectInputStream(fis);
 		Object loaded = ois.readObject();
 		ois.close();
 		fis.close();
-		return (Peer) loaded;
+		return (User) loaded;
 	}
 
 	public boolean writeChunkData(Chunk chunk, byte[] data, ChunkList toUpdate) {

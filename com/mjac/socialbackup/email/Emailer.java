@@ -9,7 +9,7 @@ import java.net.URLEncoder;
 
 import org.apache.log4j.Logger;
 
-import com.mjac.socialbackup.state.LocalPeer;
+import com.mjac.socialbackup.actors.LocalUser;
 
 public class Emailer {
 	private static final Logger logger = Logger.getLogger(Emailer.class);
@@ -34,11 +34,11 @@ public class Emailer {
 		return false;
 	}
 
-	public static boolean invite(String toEmail, LocalPeer user) {
+	public static boolean invite(String toEmail, LocalUser user) {
 		return mail(inviteUri(toEmail, user));
 	}
 
-	public static URI inviteUri(String toEmail, LocalPeer user) {
+	public static URI inviteUri(String toEmail, LocalUser user) {
 		return inviteUri(toEmail, user.getAlias(), user.getEmail(),
 				new InetSocketAddress(user.getHost(), user.getPort()), null);
 	}

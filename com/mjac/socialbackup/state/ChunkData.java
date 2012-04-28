@@ -21,6 +21,7 @@ import javax.crypto.spec.IvParameterSpec;
 import org.joda.time.DateTime;
 
 import com.mjac.socialbackup.Id;
+import com.mjac.socialbackup.actors.LocalUser;
 
 public class ChunkData extends Chunk {
 	private static final long serialVersionUID = 1L;
@@ -104,7 +105,7 @@ public class ChunkData extends Chunk {
 		return backupHash;
 	}
 
-	public boolean fill(InputStream is, LocalPeer peer, int targetSize)
+	public boolean fill(InputStream is, LocalUser peer, int targetSize)
 			throws IOException, FilenameLengthException {
 		byte[] buffer = new byte[targetSize];
 		int bytesRead = is.read(buffer, 0, targetSize);
@@ -128,7 +129,7 @@ public class ChunkData extends Chunk {
 		return true;
 	}
 
-	public void write(LocalPeer peer) throws GeneralSecurityException,
+	public void write(LocalUser peer) throws GeneralSecurityException,
 			IOException {
 		Cipher cipher = getCipher(true, peer, id);
 
@@ -149,7 +150,7 @@ public class ChunkData extends Chunk {
 		os.close();
 	}
 
-	static public ChunkData retrieve(InputStream is, Id chunkId, LocalPeer user)
+	static public ChunkData retrieve(InputStream is, Id chunkId, LocalUser user)
 			throws IOException, GeneralSecurityException {
 		Cipher cipher = getCipher(false, user, chunkId);
 
@@ -174,7 +175,7 @@ public class ChunkData extends Chunk {
 		throw new IOException("Incorrect object type in chunk data field");
 	}
 
-	static protected Cipher getCipher(boolean encrypting, LocalPeer user,
+	static protected Cipher getCipher(boolean encrypting, LocalUser user,
 			Id chunkId) throws GeneralSecurityException {
 		Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding", "BC");
 		//Cipher cipher = Cipher.getInstance("AES/CTS/SHA-256/NoPadding", "BC");

@@ -9,6 +9,7 @@ import java.util.Set;
 import org.joda.time.DateTime;
 
 import com.mjac.socialbackup.Id;
+import com.mjac.socialbackup.actors.User;
 
 public class ChunkList implements Serializable {
 	private static final long serialVersionUID = 1L;
@@ -18,7 +19,7 @@ public class ChunkList implements Serializable {
 	
 	private DateTime modified = new DateTime();
 
-	public boolean canHave(Peer peer, Chunk chunk)
+	public boolean canHave(User peer, Chunk chunk)
 	{
 		return chunk.getOutputSize() + chunkSize <= peer.getAllocation();
 	}

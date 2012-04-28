@@ -21,20 +21,20 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
 import com.mjac.socialbackup.ChangeDispatcher;
+import com.mjac.socialbackup.actors.LocalUser;
+import com.mjac.socialbackup.actors.Peer;
+import com.mjac.socialbackup.actors.RemoteUser;
+import com.mjac.socialbackup.actors.User;
 import com.mjac.socialbackup.msg.DisconnectMessage;
 import com.mjac.socialbackup.msg.Message;
 import com.mjac.socialbackup.msg.PeerMessage;
 import com.mjac.socialbackup.msg.StatusMessage;
-import com.mjac.socialbackup.state.LocalPeer;
-import com.mjac.socialbackup.state.Peer;
-import com.mjac.socialbackup.state.PeerBase;
-import com.mjac.socialbackup.state.RemotePeer;
 
 @SuppressWarnings("serial")
-public class SslConnection extends PeerBase {
+public class SslConnection extends Peer {
 	private static final Logger logger = Logger.getLogger(SslConnection.class);
 
-	transient protected RemotePeer peer;
+	transient protected RemoteUser peer;
 	transient protected SSLSocket socket;
 
 	transient protected ObjectOutputStream outObj;
@@ -45,13 +45,13 @@ public class SslConnection extends PeerBase {
 
 	protected PriorityBlockingQueue<Message> incoming = new PriorityBlockingQueue<Message>();
 
-	protected LocalPeer user;
+	protected LocalUser user;
 	protected ChangeDispatcher changeDispatcher;
 
 	protected DateTime lastSent = new DateTime();
 	protected DateTime lastReceived = new DateTime();
 
-	public SslConnection(LocalPeer user, ChangeDispatcher changeDispatcher) {
+	public SslConnection(LocalUser user, ChangeDispatcher changeDispatcher) {
 		super();
 		this.user = user;
 		this.changeDispatcher = changeDispatcher;
@@ -155,7 +155,7 @@ public class SslConnection extends PeerBase {
 		return new InetSocketAddress(host, port);
 	}
 
-	public void setUser(RemotePeer user) {
+	public void setUser(RemoteUser user) {
 		this.peer = user;
 	}
 
@@ -194,7 +194,7 @@ public class SslConnection extends PeerBase {
 		}
 
 		if (hasAssociatedPeer()) {
-			Peer removingPeer = peer;
+			User removingPeer = peer;
 			peer.stopSender();
 			peer.removeHandler();
 			removeUser();
@@ -302,7 +302,7 @@ public class SslConnection extends PeerBase {
 
 	boolean receivedDisconnect = false;
 
-	public void startReceiver(final LocalPeer localPeer) {
+	public void startReceiver(final LocalUser localPeer) {
 		if (receiverThread != null && receiverThread.isAlive()) {
 			return;
 		}
@@ -322,7 +322,7 @@ public class SslConnection extends PeerBase {
 		receiverThread.start();
 	}
 
-	protected void handleMessage(Message message, LocalPeer localPeer) {
+	protected void handleMessage(Message message, LocalUser localPeer) {
 		if (!message.valid()) {
 			logger.warn("Invalid message");
 			logger.debug(message);
@@ -359,7 +359,7 @@ public class SslConnection extends PeerBase {
 	 * Send status using peer if present (and actual allocation value),
 	 * otherwise send current properties of daemon host.
 	 */
-	public void sendStatus(LocalPeer localPeer) {
+	public void sendStatus(LocalUser localPeer) {
 		if (hasAssociatedPeer()) {
 			peer.send(new StatusMessage(localPeer));
 			return;
@@ -374,7 +374,7 @@ public class SslConnection extends PeerBase {
 	}
 
 	/** Get the peer associated with this SSL connection. */
-	public RemotePeer getPeer() {
+	public RemoteUser getPeer() {
 		return peer;
 	}
 

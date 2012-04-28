@@ -18,11 +18,11 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 
+import com.mjac.socialbackup.actors.LocalUser;
 import com.mjac.socialbackup.crypto.KeystoreManager;
 import com.mjac.socialbackup.gui.KeystoreDialog;
 import com.mjac.socialbackup.gui.ServiceDialog;
 import com.mjac.socialbackup.gui.TrayInterface;
-import com.mjac.socialbackup.state.LocalPeer;
 
 public class Daemon {
 	static Logger logger = Logger.getLogger(Daemon.class);
@@ -43,7 +43,7 @@ public class Daemon {
 
 	protected TrayInterface tray;
 
-	private LocalPeer servicePeer;
+	private LocalUser servicePeer;
 	private ChangeDispatcher changeDispatcher;
 
 	public Daemon(File directory, File keystore) {
@@ -163,20 +163,20 @@ public class Daemon {
 			return false;
 		}
 
-		ArrayList<LocalPeer> servicePeers = new ArrayList<LocalPeer>();
+		ArrayList<LocalUser> servicePeers = new ArrayList<LocalUser>();
 
 		for (File checkFile : directory.listFiles()) {
-			Id serviceId = LocalPeer.fileId(checkFile);
+			Id serviceId = LocalUser.fileId(checkFile);
 			if (serviceId == null) {
 				continue;
 			}
 
 			logger.trace("Found service " + serviceId);
 
-			LocalPeer sp = new LocalPeer(serviceId, directory);
+			LocalUser sp = new LocalUser(serviceId, directory);
 
 			try {
-				LocalPeer spRestored = sp.restore();
+				LocalUser spRestored = sp.restore();
 				spRestored.setKeystoreManager(keystoreManager);
 				spRestored.restoreClients();
 				servicePeers.add(spRestored);
@@ -190,7 +190,7 @@ public class Daemon {
 
 		int peerNo = servicePeers.size();
 		if (peerNo < 1) {
-			LocalPeer newService = new LocalPeer(new RandomisedId(), directory);
+			LocalUser newService = new LocalUser(new RandomisedId(), directory);
 			newService.setKeystoreManager(keystoreManager);
 
 			if (!editService(newService)) {
@@ -253,7 +253,7 @@ public class Daemon {
 		return true;
 	}
 	
-	static public void editRunningService(LocalPeer sp)
+	static public void editRunningService(LocalUser sp)
 	{
 		if (editService(sp)) {
 			sp.stopService();
@@ -261,7 +261,7 @@ public class Daemon {
 		}
 	}
 
-	static public boolean editService(LocalPeer sp) {
+	static public boolean editService(LocalUser sp) {
 		ServiceDialog sdChanger = new ServiceDialog(sp);
 		sdChanger.setModal(true);
 		sdChanger.setAlwaysOnTop(true);

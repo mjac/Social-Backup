@@ -17,7 +17,7 @@ import javax.swing.GroupLayout.Group;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import com.mjac.socialbackup.state.LocalPeer;
+import com.mjac.socialbackup.actors.LocalUser;
 
 @SuppressWarnings("serial")
 public class ServiceDialog extends JDialog {
@@ -35,10 +35,10 @@ public class ServiceDialog extends JDialog {
 	String emailOriginal;
 
 	JButton cancelButton;
-	LocalPeer servicePeer;
+	LocalUser servicePeer;
 	boolean changed = false;
 
-	public ServiceDialog(LocalPeer newService) {
+	public ServiceDialog(LocalUser newService) {
 		super((JFrame) null, "Service settings");
 
 		servicePeer = newService;

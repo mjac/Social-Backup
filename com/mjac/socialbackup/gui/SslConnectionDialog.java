@@ -15,9 +15,9 @@ import javax.swing.GroupLayout.Group;
 import javax.swing.event.ChangeEvent;
 
 import com.mjac.socialbackup.ChangeDispatcher;
+import com.mjac.socialbackup.actors.LocalUser;
+import com.mjac.socialbackup.actors.RemoteUser;
 import com.mjac.socialbackup.services.SslConnection;
-import com.mjac.socialbackup.state.RemotePeer;
-import com.mjac.socialbackup.state.LocalPeer;
 
 /**
  * @todo the contained sslPeer can change... actually can it? Yes it can... from
@@ -37,14 +37,14 @@ public class SslConnectionDialog extends MutableDialog {
 	protected JTextField aliasTextField;
 	protected JTextField allocTextField;
 
-	protected LocalPeer servicePeer;
+	protected LocalUser servicePeer;
 	protected ChangeDispatcher changeDispatcher;
 
 	protected SslConnection sslConn;
 
 	protected AbstractButton createButton;
 
-	public SslConnectionDialog(LocalPeer servicePeer,
+	public SslConnectionDialog(LocalUser servicePeer,
 			ChangeDispatcher changeDispatcher, SslConnection newPeer) {
 		super((JFrame) null, "Add a friend");
 
@@ -75,7 +75,7 @@ public class SslConnectionDialog extends MutableDialog {
 		hostDescription.setRows(2);
 
 		JLabel portLabel = new JLabel("Port");
-		portTextField = new JTextField(LocalPeer.defaultPort);
+		portTextField = new JTextField(LocalUser.defaultPort);
 		JTextArea portDescription = new TextNote(
 				"Leave this as default unless you are setting up port forwarding.");
 		portDescription.setRows(2);
@@ -295,7 +295,7 @@ public class SslConnectionDialog extends MutableDialog {
 		updateGui();
 
 		if (sslConn.hasAssociatedPeer()) {
-			RemotePeer newPeer = sslConn.getPeer();
+			RemoteUser newPeer = sslConn.getPeer();
 			JOptionPane.showMessageDialog(thisRef, "You are now connected to "
 					+ newPeer.getAlias() + ".\n"
 					+ "The connection properties will now close.",
