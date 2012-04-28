@@ -26,27 +26,24 @@ public class Peer {
 			allocation = newAllocation;
 		}
 	}
-	
-	public boolean setValidAlias(String newAlias)
-	{
+
+	public boolean setValidAlias(String newAlias) {
 		if (validAlias(newAlias)) {
 			alias = newAlias;
 			return true;
 		}
 		return false;
 	}
-	
-	public boolean setValidEmail(String newEmail)
-	{
+
+	public boolean setValidEmail(String newEmail) {
 		if (validEmail(newEmail)) {
 			email = newEmail;
 			return true;
 		}
 		return false;
 	}
-	
-	public boolean setValidHostPort(String newHost, int newPort)
-	{
+
+	public boolean setValidHostPort(String newHost, int newPort) {
 		if (validHostPort(newHost, newPort)) {
 			host = newHost;
 			port = newPort;
@@ -73,15 +70,6 @@ public class Peer {
 
 	public long getAllocation() {
 		return allocation;
-	}
-
-	/** Copy peer status from ssl status in initial creation (for instance). */
-	public void copyStatus(Peer pb) {
-		alias = pb.alias;
-		email = pb.email;
-		host = pb.host;
-		port = pb.port;
-		allocation = pb.allocation;
 	}
 
 	static public boolean validEmail(String email) {

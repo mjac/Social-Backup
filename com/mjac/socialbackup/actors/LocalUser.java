@@ -238,7 +238,7 @@ public class LocalUser extends User implements ChangeListener {
 		if (existingAlias == null) {
 			logger.trace("Key not assigned, adding to keystore");
 			// Not associated in keystore, generate new ID.
-			newPeer = new RemoteUser(new RandomisedId(), directory);
+			newPeer = new RemoteUser(new RandomisedId(), directory, sslPeer);
 			newPeer.setRemoteAllocation(remoteAllocation);
 
 			PublicKey existingKey = null;
@@ -266,7 +266,7 @@ public class LocalUser extends User implements ChangeListener {
 		} else {
 			// Associated in keystore, create peer.
 			logger.trace("Key already assigned to " + existingAlias);
-			newPeer = new RemoteUser(new Id(existingAlias), directory);
+			newPeer = new RemoteUser(new Id(existingAlias), directory, sslPeer);
 			// Does the peer exist though or is it just in the keystore?
 		}
 
@@ -275,8 +275,6 @@ public class LocalUser extends User implements ChangeListener {
 			logger.warn("ID already assigned to peer - already a peer associated");
 			return null;
 		}
-
-		newPeer.copyStatus(sslPeer);
 
 		// Replaces any duplicates
 		// http://stackoverflow.com/questions/1669885/java-hashmap-duplicates
@@ -456,9 +454,8 @@ public class LocalUser extends User implements ChangeListener {
 		for (Id clientId : peerIds.toArray(new Id[]{})) {
 			RemoteUser cp = new RemoteUser(clientId, directory);
 
-			RemoteUser cpRestored;
 			try {
-				cpRestored = cp.restore();
+				RemoteUser cpRestored = cp.restore();
 				peers.put(cpRestored.getId(), cpRestored);
 			} catch (FileNotFoundException e) {
 				logger.warn("Client file is missing for " + clientId

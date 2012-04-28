@@ -40,8 +40,18 @@ public class RemoteUser extends User {
 	/** Allocation to the remote peer. */
 	protected long remoteAllocation = 0L;
 
-	public RemoteUser(Id id, File localStore) {
-		super(id, localStore);
+	public RemoteUser(Id clientId, File localStore) {
+		super(clientId, localStore);
+	}
+
+	public RemoteUser(Id clientId, File localStore, SslConnection pb) {
+		super(clientId, localStore);
+
+		alias = pb.alias;
+		email = pb.email;
+		host = pb.host;
+		port = pb.port;
+		allocation = pb.allocation;
 	}
 
 	public void setRemoteAllocation(long remoteAllocation) {
