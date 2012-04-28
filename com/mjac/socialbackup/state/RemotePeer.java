@@ -223,12 +223,14 @@ public class RemotePeer extends Peer {
 	// SYNC TO DISK
 
 	@Override
-	public RemotePeer restore() {
+	public RemotePeer restore() throws IOException, ClassNotFoundException {
 		Peer cp = super.restore();
+
 		if (cp instanceof RemotePeer) {
 			return (RemotePeer) cp;
 		}
-		return null;
+
+		throw new IOException("Invalid remote peer type");
 	}
 	
 	private void readObject(java.io.ObjectInputStream stream)

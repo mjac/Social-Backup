@@ -175,11 +175,16 @@ public class Daemon {
 
 			LocalPeer sp = new LocalPeer(serviceId, directory);
 
-			LocalPeer spRestored = sp.restore();
-			if (spRestored != null) {
+			try {
+				LocalPeer spRestored = sp.restore();
 				spRestored.setKeystoreManager(keystoreManager);
 				spRestored.restoreClients();
 				servicePeers.add(spRestored);
+				spRestored.persist();
+			} catch (IOException e) {
+				logger.warn("Could not restore local " + serviceId, e);
+			} catch (ClassNotFoundException e) {
+				logger.warn("Could not restore local " + serviceId, e);
 			}
 		}
 

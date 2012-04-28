@@ -2,6 +2,7 @@ package com.mjac.socialbackup.state;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -91,7 +92,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 		host = "";
 		port = defaultPort;
 		allocation = 100 << 20;
-		
+
 		this.directory = localStore;
 
 		connections = new ArrayList<SslConnection>();
@@ -414,12 +415,17 @@ public class LocalPeer extends Peer implements ChangeListener {
 	// SYNCHRONISATION TO DISK
 
 	@Override
-	public LocalPeer restore() {
+	public LocalPeer restore() throws IOException, ClassNotFoundException {
 		Peer cp = super.restore();
+
 		if (cp instanceof LocalPeer) {
-			return (LocalPeer) cp;
+			LocalPeer localPeer = (LocalPeer) cp;
+			localPeer.directory = directory;
+			localPeer.localStore = localStore;
+			return localPeer;
 		}
-		return null;
+
+		throw new IOException("Invalid peer type");
 	}
 
 	private void writeObject(ObjectOutputStream out) throws IOException,
@@ -446,14 +452,21 @@ public class LocalPeer extends Peer implements ChangeListener {
 			return;
 		}
 
-		for (Id clientId : peerIds) {
+		for (Id clientId : peerIds.toArray(new Id[]{})) {
 			RemotePeer cp = new RemotePeer(clientId, directory);
 
-			RemotePeer cpRestored = cp.restore();
-			if (cpRestored == null) {
-				logger.warn("Could not restore client " + clientId);
-			} else {
+			RemotePeer cpRestored;
+			try {
+				cpRestored = cp.restore();
 				peers.put(cpRestored.getId(), cpRestored);
+			} catch (FileNotFoundException e) {
+				logger.warn("Client file is missing for " + clientId
+						+ ", removing reference", e);
+				peerIds.remove(clientId);
+			} catch (IOException e) {
+				logger.warn("Could not restore client " + clientId, e);
+			} catch (ClassNotFoundException e) {
+				logger.warn("Could not restore client " + clientId, e);
 			}
 		}
 	}
@@ -622,7 +635,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 			syncPeer(peer);
 		}
 	}
-	
+
 	public void syncPeer(RemotePeer peer) {
 		if (peer.needsChunkListing(getListDuration())) {
 			peer.sendChunkListing();
@@ -636,7 +649,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 			connect(peer);
 		}
 	}
-	
+
 	public boolean isConnectedTo(RemotePeer remotePeer) {
 		for (RemotePeer checkPeer : getPeers()) {
 			if (remotePeer.getHost().equals(checkPeer.getHost())
