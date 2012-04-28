@@ -106,7 +106,7 @@ public class Backup implements Serializable {
 
 			InputStream chunkInput = null;
 			try {
-				chunkInput = chunk.getInputStream(user);
+				chunkInput = chunk.getInputStream(user, user);
 				ChunkData cdata = ChunkData.retrieve(chunkInput, chunk.getId(),
 						user);
 				os.write(cdata.getData());

@@ -90,7 +90,7 @@ public class PeerTracker implements Serializable {
 
 		byte[] localData;
 		try {
-			localData = diskChunk.getEncryptedData(peer);
+			localData = diskChunk.getEncryptedData(peer, user);
 		} catch (IOException e) {
 			resetChallenge();
 			return;

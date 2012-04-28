@@ -109,11 +109,11 @@ public class NetworkTest {
 
 		RemotePeer meInYou = you.createPeer(me.getConnections().toArray(new SslConnection[]{})[0], 100);
 		Assert.assertTrue(meInYou.isHandled());
-		Assert.assertTrue(meInYou.isConnectionUsed());
+		Assert.assertTrue(meInYou.isConnectionUsed(you));
 
 		RemotePeer youInMe = me.createPeer(you.getConnections().toArray(new SslConnection[]{})[0], 100);
 		Assert.assertTrue(youInMe.isHandled());
-		Assert.assertTrue(youInMe.isConnectionUsed());
+		Assert.assertTrue(youInMe.isConnectionUsed(me));
 
 		me.createPlacingStrategy();
 		me.performSync();

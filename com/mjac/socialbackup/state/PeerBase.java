@@ -17,13 +17,6 @@ public class PeerBase implements Serializable {
 	/** Allocation or allocation request. */
 	protected long allocation = 0L;
 
-	transient protected LocalPeer localPeer;
-	
-	public void setLocalPeer(LocalPeer localPeer)
-	{
-		this.localPeer = localPeer;
-	}
-
 	protected void updateStatus(StatusMessage status) {
 		host = status.getHost();
 		port = status.getPort();

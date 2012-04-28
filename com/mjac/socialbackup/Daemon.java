@@ -176,7 +176,7 @@ public class Daemon {
 			LocalPeer sp = new LocalPeer(serviceId);
 			sp.setDirectory(directory);
 
-			LocalPeer spRestored = sp.restore();
+			LocalPeer spRestored = sp.restore(sp);
 			if (spRestored != null) {
 				spRestored.setDirectory(directory);
 				spRestored.setKeystoreManager(keystoreManager);
@@ -266,7 +266,7 @@ public class Daemon {
 		sdChanger.setVisible(true);
 
 		if (sdChanger.changed()) {
-			return sp.persist();
+			return sp.persist(sp);
 		}
 
 		return false;

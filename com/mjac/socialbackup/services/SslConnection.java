@@ -303,7 +303,7 @@ public class SslConnection extends PeerBase {
 
 	boolean receivedDisconnect = false;
 
-	public void startReceiver() {
+	public void startReceiver(final LocalPeer localPeer) {
 		if (receiverThread != null && receiverThread.isAlive()) {
 			return;
 		}
@@ -314,7 +314,7 @@ public class SslConnection extends PeerBase {
 				while (receiving) {
 					Message message = receive();
 					if (message != null) {
-						handleMessage(message);
+						handleMessage(message, localPeer);
 					}
 				}
 			}
@@ -322,11 +322,11 @@ public class SslConnection extends PeerBase {
 		receiverThread.start();
 	}
 
-	protected void handleMessage(Message message) {
+	protected void handleMessage(Message message, LocalPeer localPeer) {
 
 		if (message instanceof PeerMessage) {
 			if (hasAssociatedPeer()) {
-				peer.receive(message);
+				peer.receive(message, localPeer);
 			} else {
 				logger.warn("Peer message dropped as not authenticated ("
 						+ message.getClass().getSimpleName() + ")");
@@ -345,7 +345,7 @@ public class SslConnection extends PeerBase {
 		} else if (message instanceof StatusMessage) {
 			updateStatus((StatusMessage) message);
 			if (hasAssociatedPeer()) {
-				peer.receive(message);
+				peer.receive(message, localPeer);
 			}
 			changeDispatcher.stateChanged(new ChangeEvent(this));
 		}
@@ -358,9 +358,9 @@ public class SslConnection extends PeerBase {
 	 * Send status using peer if present (and actual allocation value),
 	 * otherwise send current properties of daemon host.
 	 */
-	public void sendStatus() {
+	public void sendStatus(LocalPeer localPeer) {
 		if (hasAssociatedPeer()) {
-			peer.sendStatus();
+			peer.sendStatus(localPeer);
 			return;
 		}
 

@@ -8,6 +8,7 @@ import org.joda.time.DateTime;
 
 import com.mjac.socialbackup.Daemon;
 import com.mjac.socialbackup.state.Chunk;
+import com.mjac.socialbackup.state.LocalPeer;
 import com.mjac.socialbackup.state.Peer;
 
 /** A lazy chunk transfer device. */
@@ -44,9 +45,9 @@ abstract public class ChunkMessage extends PeerMessage {
 				&& chunk.getOutputSize() == data.length;
 	}
 
-	private void writeObject(ObjectOutputStream out) throws IOException,
+	private void writeObject(ObjectOutputStream out, LocalPeer localPeer) throws IOException,
 			ClassNotFoundException {
-		data = chunk.getEncryptedData(peer);
+		data = chunk.getEncryptedData(peer, localPeer);
 		logger.info("sent " + chunk.getOutputSize() + " " + new DateTime().getMillis());
 		out.defaultWriteObject();
 	}

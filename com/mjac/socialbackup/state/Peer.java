@@ -51,12 +51,12 @@ public class Peer extends PeerBase {
 
 	// PEER LOCATION ON DISK
 
-	public File getFile() {
-		return getFile(fileExtension);
+	public File getFile(LocalPeer localPeer) {
+		return getFile(localPeer, fileExtension);
 	}
 
-	protected File getFile(String ext) {
-		return new File(getDirectory().getPath() + File.separatorChar + id
+	protected File getFile(LocalPeer localPeer, String ext) {
+		return new File(getDirectory(localPeer).getPath() + File.separatorChar + id
 				+ ext);
 	}
 
@@ -73,20 +73,20 @@ public class Peer extends PeerBase {
 		return null;
 	}
 
-	public File getDirectory() {
+	public File getDirectory(LocalPeer localPeer) {
 		return localPeer.getDirectory();
 	}
 
-	public File getChunkDirectory() {
+	public File getChunkDirectory(LocalPeer localPeer) {
 
-		return new File(getDirectory().getPath() + File.separatorChar + id);
+		return new File(getDirectory(localPeer).getPath() + File.separatorChar + id);
 	}
 
 	// SERIALIZATION
 
-	public boolean persist() {
+	public boolean persist(LocalPeer localPeer) {
 		try {
-			FileOutputStream fos = new FileOutputStream(getFile());
+			FileOutputStream fos = new FileOutputStream(getFile(localPeer));
 			ObjectOutputStream oos = new ObjectOutputStream(fos);
 			oos.writeObject(this);
 			oos.close();
@@ -98,9 +98,9 @@ public class Peer extends PeerBase {
 		}
 	}
 
-	public Peer restore() {
+	public Peer restore(LocalPeer localPeer) {
 		try {
-			FileInputStream fis = new FileInputStream(getFile());
+			FileInputStream fis = new FileInputStream(getFile(localPeer));
 			ObjectInputStream ois = new ObjectInputStream(fis);
 			Object loaded = ois.readObject();
 			ois.close();
@@ -115,10 +115,10 @@ public class Peer extends PeerBase {
 		return null;
 	}
 	
-	public boolean writeChunkData(Chunk chunk, byte[] data, ChunkList toUpdate)
+	public boolean writeChunkData(Chunk chunk, byte[] data, ChunkList toUpdate, LocalPeer localPeer)
 	{
 		try {
-			chunk.writeBytes(this, data);
+			chunk.writeBytes(this, data, localPeer);
 		} catch (Exception e) {
 			logger.warn("Raw chunk data could not be written.", e);
 			return false;
@@ -126,7 +126,7 @@ public class Peer extends PeerBase {
 
 		toUpdate.set(chunk);
 
-		persist();
+		persist(localPeer);
 		
 		return true;
 	}

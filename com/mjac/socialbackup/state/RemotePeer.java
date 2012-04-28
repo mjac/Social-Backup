@@ -129,14 +129,14 @@ public class RemotePeer extends Peer {
 		send(message);
 	}
 
-	public void sendStatus() {
+	public void sendStatus(LocalPeer localPeer) {
 		StatusMessage message = new StatusMessage(localPeer.getAlias(),
 				localPeer.getEmail(), localPeer.getHost(), localPeer.getPort(),
 				localPeer.getAllocation());
 		send(message);
 	}
 
-	public void receive(Message message) {
+	public void receive(Message message, LocalPeer localPeer) {
 		logger.trace("@" + localPeer.getAlias() + " <- "
 				+ message.getClass().getSimpleName() + " <- " + getAlias());
 
@@ -150,16 +150,16 @@ public class RemotePeer extends Peer {
 		if (message instanceof StatusMessage) {
 			updateStatus((StatusMessage) message);
 		} else if (message instanceof ChunkMessage) {
-			receiveChunk((ChunkMessage) message);
+			receiveChunk((ChunkMessage) message, localPeer);
 		} else if (message instanceof ChunkListMessage) {
-			receiveLists((ChunkListMessage) message);
+			receiveLists((ChunkListMessage) message, localPeer);
 		}
 	}
 
-	private void receiveLists(ChunkListMessage message) {
+	private void receiveLists(ChunkListMessage message, LocalPeer localPeer) {
 		// if (tracker.getSyncSent())
 		tracker.syncReceived();
-		syncReceiverList(message.getReceiverChunks());
+		syncReceiverList(message.getReceiverChunks(), localPeer);
 		syncSenderList(message.getSenderChunks());
 		// message.getSenderChunks();
 	}
@@ -177,7 +177,7 @@ public class RemotePeer extends Peer {
 		}
 	}
 
-	private void syncReceiverList(ChunkList receiverChunks) {
+	private void syncReceiverList(ChunkList receiverChunks, LocalPeer localPeer) {
 		ChunkList compare = receiverChunks.missing(chunks);
 
 		if (compare.isEmpty()) {
@@ -190,20 +190,20 @@ public class RemotePeer extends Peer {
 		}
 	}
 
-	private boolean receiveChunk(ChunkMessage message) {
+	private boolean receiveChunk(ChunkMessage message, LocalPeer localPeer) {
 		Chunk chunk = message.getChunk();
 		byte[] data = message.getData();
 
 		if (message instanceof ChunkSendMessage) {
-			return receiveRemoteChunk(chunk, data);
+			return receiveRemoteChunk(chunk, data, localPeer);
 		} else if (message instanceof ChunkReturnMessage) {
-			return receiveLocalChunk(chunk, data);
+			return receiveLocalChunk(chunk, data, localPeer);
 		} else {
 			return false;
 		}
 	}
 
-	private boolean receiveLocalChunk(Chunk chunk, byte[] data) {
+	private boolean receiveLocalChunk(Chunk chunk, byte[] data, LocalPeer localPeer) {
 		return localPeer.receiveChunkData(chunk, data);
 	}
 
@@ -214,7 +214,7 @@ public class RemotePeer extends Peer {
 	 * @param data
 	 * @return
 	 */
-	private boolean receiveRemoteChunk(Chunk chunk, byte[] data) {
+	private boolean receiveRemoteChunk(Chunk chunk, byte[] data, LocalPeer localPeer) {
 		if (remoteChunks.has(chunk)) {
 			return false;
 		}
@@ -225,11 +225,11 @@ public class RemotePeer extends Peer {
 		}
 
 		logger.info("receive " + new DateTime().getMillis());
-		return writeChunkData(chunk, data, remoteChunks);
+		return writeChunkData(chunk, data, remoteChunks, localPeer);
 	}
 
 	/** Connect and send messages, if not already connected. */
-	public void connectForSend() {
+	public void connectForSend(LocalPeer localPeer) {
 		if (outgoing.isEmpty() || isHandled()) {
 			return;
 		}
@@ -240,7 +240,7 @@ public class RemotePeer extends Peer {
 	/**
 	 * Call when receive a chunk list too!
 	 */
-	public void maintenance() {
+	public void maintenance(LocalPeer localPeer) {
 		DateTime now = new DateTime();
 
 		DateTime listValidAfter = now.minus(localPeer.getListDuration());
@@ -254,17 +254,16 @@ public class RemotePeer extends Peer {
 		if (tracker.getLastReceived() == null || tracker.getLastSent() == null
 				|| tracker.getLastReceived().isBefore(lastStatusRequired)
 				|| tracker.getLastSent().isBefore(lastStatusRequired)) {
-			sendStatus();
+			sendStatus(localPeer);
 		}
 
-		if (!isConnectionUsed()) {
-			connectForSend();
+		if (!isConnectionUsed(localPeer)) {
+			connectForSend(localPeer);
 		}
 	}
 
 	/** Is there another peer with the same address, that is already handled? */
-	public boolean isConnectionUsed() {
-
+	public boolean isConnectionUsed(LocalPeer localPeer) {
 		for (RemotePeer checkPeer : localPeer.getPeers()) {
 			if (getHost().equals(checkPeer.getHost())
 					&& getPort() == checkPeer.getPort()
@@ -276,8 +275,8 @@ public class RemotePeer extends Peer {
 	}
 
 	@Override
-	public File getFile() {
-		return getFile(fileExtension);
+	public File getFile(LocalPeer localPeer) {
+		return getFile(localPeer, fileExtension);
 	}
 
 	static public Id fileId(File checkFile) {
@@ -287,8 +286,8 @@ public class RemotePeer extends Peer {
 	// SYNC TO DISK
 
 	@Override
-	public RemotePeer restore() {
-		Peer cp = super.restore();
+	public RemotePeer restore(LocalPeer localPeer) {
+		Peer cp = super.restore(localPeer);
 		if (cp instanceof RemotePeer) {
 			return (RemotePeer) cp;
 		}

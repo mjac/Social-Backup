@@ -91,8 +91,6 @@ public class LocalPeer extends Peer implements ChangeListener {
 		allocation = 100 << 20;
 
 		connections = new ArrayList<SslConnection>();
-
-		localPeer = this;
 	}
 
 	public void setChangeDispatcher(ChangeDispatcher changeDispatcher) {
@@ -108,8 +106,8 @@ public class LocalPeer extends Peer implements ChangeListener {
 	}
 
 	@Override
-	public File getFile() {
-		return getFile(fileExtension);
+	public File getFile(LocalPeer localPeer) {
+		return getFile(localPeer, fileExtension);
 	}
 
 	static public Id fileId(File checkFile) {
@@ -187,7 +185,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 		}
 
 		backups.add(newBackup);
-		persist();
+		persist(this);
 
 		return true;
 	}
@@ -231,7 +229,6 @@ public class LocalPeer extends Peer implements ChangeListener {
 			logger.trace("Key not assigned, adding to keystore");
 			// Not associated in keystore, generate new ID.
 			newPeer = new RemotePeer(new RandomisedId());
-			newPeer.setLocalPeer(this);
 			newPeer.setRemoteAllocation(remoteAllocation);
 
 			PublicKey existingKey = null;
@@ -260,7 +257,6 @@ public class LocalPeer extends Peer implements ChangeListener {
 			// Associated in keystore, create peer.
 			logger.trace("Key already assigned to " + existingAlias);
 			newPeer = new RemotePeer(new Id(existingAlias));
-			newPeer.setLocalPeer(this);
 			// Does the peer exist though or is it just in the keystore?
 		}
 
@@ -276,13 +272,13 @@ public class LocalPeer extends Peer implements ChangeListener {
 		// http://stackoverflow.com/questions/1669885/java-hashmap-duplicates
 		peers.put(newPeer.getId(), newPeer);
 
-		persist();
-		newPeer.persist();
+		persist(this);
+		newPeer.persist(this);
 
 		connectPeer(sslPeer, newPeer);
 
 		newPeer.startSender();
-		sslPeer.startReceiver();
+		sslPeer.startReceiver(this);
 
 		changeDispatcher.stateChanged(new ChangeEvent(newPeer));
 		changeDispatcher.stateChanged(new ChangeEvent(sslPeer));
@@ -331,15 +327,11 @@ public class LocalPeer extends Peer implements ChangeListener {
 				logger.trace("Key corresponds to existing peer "
 						+ newPeer.getAlias());
 
-				newPeer.setLocalPeer(this); // This should not be necessary
-				// after
-				// deserialisation by servicepeer class, automatically assigned.
-
 				connectPeer(sslPeer, newPeer);
 
 				newPeer.startSender();
-				sslPeer.startReceiver();
-				newPeer.sendStatus();
+				sslPeer.startReceiver(this);
+				newPeer.sendStatus(this);
 
 				changeDispatcher.stateChanged(new ChangeEvent(newPeer));
 				changeDispatcher.stateChanged(new ChangeEvent(sslPeer));
@@ -349,8 +341,8 @@ public class LocalPeer extends Peer implements ChangeListener {
 		}
 
 		logger.trace("Unrecognised peer, handling and putting into friend request queue");
-		sslPeer.startReceiver();
-		sslPeer.sendStatus();
+		sslPeer.startReceiver(this);
+		sslPeer.sendStatus(this);
 
 		connections.add(sslPeer);
 
@@ -422,8 +414,8 @@ public class LocalPeer extends Peer implements ChangeListener {
 	// SYNCHRONISATION TO DISK
 
 	@Override
-	public LocalPeer restore() {
-		Peer cp = super.restore();
+	public LocalPeer restore(LocalPeer localPeer) {
+		Peer cp = super.restore(localPeer);
 		if (cp instanceof LocalPeer) {
 			return (LocalPeer) cp;
 		}
@@ -446,7 +438,6 @@ public class LocalPeer extends Peer implements ChangeListener {
 
 		connections = new ArrayList<SslConnection>();
 		peers = new HashMap<Id, RemotePeer>();
-		localPeer = this;
 	}
 
 	public void restoreClients() {
@@ -457,13 +448,11 @@ public class LocalPeer extends Peer implements ChangeListener {
 
 		for (Id clientId : peerIds) {
 			RemotePeer cp = new RemotePeer(clientId);
-			cp.setLocalPeer(this);
 
-			RemotePeer cpRestored = cp.restore();
+			RemotePeer cpRestored = cp.restore(this);
 			if (cpRestored == null) {
 				logger.warn("Could not restore client " + clientId);
 			} else {
-				cpRestored.setLocalPeer(this);
 				peers.put(cpRestored.getId(), cpRestored);
 			}
 		}
@@ -520,7 +509,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 
 		// There is an empty reference to the chunk (missing).
 		if (chunks.missing(chunk)) {
-			writeChunkData(chunk, data, chunks);
+			writeChunkData(chunk, data, chunks, this);
 			return false;
 		}
 
@@ -541,8 +530,8 @@ public class LocalPeer extends Peer implements ChangeListener {
 				}
 			}
 
-			writeChunkData(chunk, data, chunks);
-			persist();
+			writeChunkData(chunk, data, chunks, this);
+			persist(this);
 			return true;
 		}
 
@@ -630,7 +619,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 	/** Check to see if peers have messages to send or needs sync. */
 	public void performSync() {
 		for (RemotePeer peer : getPeers()) {
-			peer.maintenance();
+			peer.maintenance(this);
 		}
 	}
 }
