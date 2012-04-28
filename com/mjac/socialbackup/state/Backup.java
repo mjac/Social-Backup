@@ -74,16 +74,6 @@ public class Backup implements Serializable {
 		chunkIds[cdata.getIndex()] = cdata.getId();
 	}
 
-	public boolean isAvailable(LocalPeer localPeer) {
-		ChunkList peerStore = localPeer.getChunkList();
-		for (Id chunkId : chunkIds) {
-			if (!peerStore.has(chunkId)) {
-				return false;
-			}
-		}
-		return true;
-	}
-
 	public boolean verify(InputStream is) {
 		try {
 			byte[] isHash = Hasher.hash(is);
@@ -105,7 +95,7 @@ public class Backup implements Serializable {
 
 			InputStream chunkInput = null;
 			try {
-				chunkInput = chunk.getInputStream(user, user);
+				chunkInput = chunk.getInputStream(user);
 				ChunkData cdata = ChunkData.retrieve(chunkInput, chunk.getId(),
 						user);
 				os.write(cdata.getData());

@@ -9,6 +9,7 @@ import java.io.ObjectOutputStream;
 import org.apache.log4j.Logger;
 
 import com.mjac.socialbackup.Id;
+import com.mjac.socialbackup.msg.ChunkSendMessage;
 
 public class Peer extends PeerBase {
 	private static final long serialVersionUID = 1L;
@@ -74,7 +75,7 @@ public class Peer extends PeerBase {
 		return null;
 	}
 
-	public File getChunkDirectory(LocalPeer localPeer) {
+	public File getChunkDirectory() {
 
 		return new File(localStore.getPath() + File.separatorChar + id);
 	}
@@ -112,10 +113,9 @@ public class Peer extends PeerBase {
 		return null;
 	}
 
-	public boolean writeChunkData(Chunk chunk, byte[] data, ChunkList toUpdate,
-			LocalPeer localPeer) {
+	public boolean writeChunkData(Chunk chunk, byte[] data, ChunkList toUpdate) {
 		try {
-			chunk.writeBytes(this, data, localPeer);
+			chunk.writeBytes(this, data);
 		} catch (Exception e) {
 			logger.warn("Raw chunk data could not be written.", e);
 			return false;

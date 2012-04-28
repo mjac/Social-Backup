@@ -7,7 +7,6 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
 import com.mjac.socialbackup.state.Chunk;
-import com.mjac.socialbackup.state.LocalPeer;
 import com.mjac.socialbackup.state.Peer;
 
 /** A lazy chunk transfer device. */
@@ -34,19 +33,15 @@ abstract public class ChunkMessage extends PeerMessage {
 		return data;
 	}
 
-	/**
-	 * @todo Use a verifyiable interface on lots of objects! Need to check them
-	 *       recursively then check them together.
-	 */
 	@Override
 	public boolean valid() {
 		return data != null && chunk != null && chunk.getId() != null
 				&& chunk.getOutputSize() == data.length;
 	}
 
-	private void writeObject(ObjectOutputStream out, LocalPeer localPeer) throws IOException,
+	private void writeObject(ObjectOutputStream out) throws IOException,
 			ClassNotFoundException {
-		data = chunk.getEncryptedData(peer, localPeer);
+		data = chunk.getEncryptedData(peer);
 		logger.info("sent " + chunk.getOutputSize() + " " + new DateTime().getMillis());
 		out.defaultWriteObject();
 	}

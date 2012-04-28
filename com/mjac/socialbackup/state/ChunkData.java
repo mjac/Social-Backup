@@ -132,7 +132,7 @@ public class ChunkData extends Chunk {
 			IOException {
 		Cipher cipher = getCipher(true, peer, id);
 
-		OutputStream os = getOutputStream(peer, peer);
+		OutputStream os = getOutputStream(peer);
 
 		DataOutputStream dos = new DataOutputStream(os);
 		CipherOutputStream cos = new CipherOutputStream(dos, cipher);

@@ -5,6 +5,8 @@ import java.io.Serializable;
 import java.util.Random;
 
 import org.joda.time.DateTime;
+import org.joda.time.Duration;
+import org.joda.time.ReadableDuration;
 
 import com.mjac.socialbackup.Id;
 import com.mjac.socialbackup.msg.ChunkMessage;
@@ -70,8 +72,8 @@ public class PeerTracker implements Serializable {
 		return challengeChunkId;
 	}
 
-	public void checkChallenge(ChunkMessage chunkContent,
-			RemotePeer peer, LocalPeer user) {
+	public void checkChallenge(ChunkMessage chunkContent, RemotePeer peer,
+			LocalPeer user) {
 		try {
 			if (challengeChunkId == null
 					|| !chunkContent.getChunk().getId()
@@ -90,7 +92,7 @@ public class PeerTracker implements Serializable {
 
 		byte[] localData;
 		try {
-			localData = diskChunk.getEncryptedData(peer, user);
+			localData = diskChunk.getEncryptedData(peer);
 		} catch (IOException e) {
 			resetChallenge();
 			return;
@@ -111,5 +113,19 @@ public class PeerTracker implements Serializable {
 		if (connected) {
 			++connectSuccess;
 		}
+	}
+
+	public boolean needsSync(ReadableDuration listValidDuration) {
+		DateTime listValidAfter = new DateTime().minus(listValidDuration);
+		return getSyncReceived() == null || getSyncSent() == null
+				|| getSyncReceived().isBefore(listValidAfter)
+				|| getSyncSent().isBefore(listValidAfter);
+	}
+	
+	public boolean needsStatus(ReadableDuration statusValidDuration) {
+		DateTime lastStatusRequired = new DateTime().minus(statusValidDuration);
+		return getLastReceived() == null || getLastSent() == null
+				|| getLastReceived().isBefore(lastStatusRequired)
+				|| getLastSent().isBefore(lastStatusRequired);
 	}
 }

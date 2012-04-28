@@ -22,9 +22,7 @@ public class Chunk implements Serializable {
 
 	protected Id id;
 
-	/**
-	 * Size of serialized chunk on disk!
-	 */
+	/** Size of serialized chunk on disk */
 	protected int outputSize;
 
 	public Chunk(Id id, int outputSize) {
@@ -58,13 +56,13 @@ public class Chunk implements Serializable {
 		return other.id == id;
 	}
 
-	public File getFile(Peer peer, LocalPeer localPeer) {
-		File chunkDir = peer.getChunkDirectory(localPeer);
+	public File getFile(Peer peer) {
+		File chunkDir = peer.getChunkDirectory();
 		return new File(chunkDir.getPath() + File.separatorChar + id.toString());
 	}
 
-	public OutputStream getOutputStream(Peer peer, LocalPeer localPeer) {
-		File peerFile = getFile(peer, localPeer);
+	public OutputStream getOutputStream(Peer peer) {
+		File peerFile = getFile(peer);
 		try {
 			return new FileOutputStream(peerFile);
 		} catch (FileNotFoundException e) {
@@ -84,8 +82,8 @@ public class Chunk implements Serializable {
 		}
 	}
 
-	public InputStream getInputStream(Peer peer, LocalPeer localPeer) throws IOException {
-		File chunkFile = getFile(peer, localPeer);
+	public InputStream getInputStream(Peer peer) throws IOException {
+		File chunkFile = getFile(peer);
 		if (chunkFile == null) {
 			return null;
 		}
@@ -94,9 +92,9 @@ public class Chunk implements Serializable {
 	}
 
 	/** Write a raw chunk to a peer. */
-	public void writeBytes(Peer peer, byte[] data, LocalPeer localPeer)
+	public void writeBytes(Peer peer, byte[] data)
 			throws GeneralSecurityException, IOException {
-		OutputStream os = getOutputStream(peer, localPeer);
+		OutputStream os = getOutputStream(peer);
 		os.write(data);
 		os.close();
 	}
@@ -106,8 +104,8 @@ public class Chunk implements Serializable {
 	 * 
 	 * @throws IOException
 	 */
-	public byte[] getEncryptedData(Peer peer, LocalPeer localPeer) throws IOException {
-		InputStream fis = getInputStream(peer, localPeer);
+	public byte[] getEncryptedData(Peer peer) throws IOException {
+		InputStream fis = getInputStream(peer);
 		byte[] allBytes = new byte[fis.available()];
 		fis.read(allBytes);
 		fis.close();

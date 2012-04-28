@@ -6,6 +6,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
+import org.joda.time.ReadableDuration;
 
 import com.mjac.socialbackup.Id;
 import com.mjac.socialbackup.msg.ChunkListMessage;
@@ -125,8 +126,7 @@ public class RemotePeer extends Peer {
 
 	public void sendChunkListing() {
 		tracker.syncSent();
-		ChunkListMessage message = new ChunkListMessage(chunks, remoteChunks);
-		send(message);
+		send(new ChunkListMessage(chunks, remoteChunks));
 	}
 
 	public void receive(Message message, LocalPeer localPeer) {
@@ -149,38 +149,24 @@ public class RemotePeer extends Peer {
 		}
 	}
 
-	private void receiveLists(ChunkListMessage message, LocalPeer localPeer) {
-		// if (tracker.getSyncSent())
-		tracker.syncReceived();
-		syncReceiverList(message.getReceiverChunks(), localPeer);
-		syncSenderList(message.getSenderChunks());
-		// message.getSenderChunks();
-	}
-
 	private void syncSenderList(ChunkList senderChunks) {
 		ChunkList compare = senderChunks.missing(remoteChunks);
-
-		if (compare.isEmpty()) {
-			return;
-		}
-
 		for (Chunk chunk : compare.getChunks()) {
-			ChunkReturnMessage crm = new ChunkReturnMessage(chunk, this);
-			send(crm);
+			send(new ChunkReturnMessage(chunk, this));
 		}
 	}
 
 	private void syncReceiverList(ChunkList receiverChunks, LocalPeer localPeer) {
 		ChunkList compare = receiverChunks.missing(chunks);
-
-		if (compare.isEmpty()) {
-			return;
-		}
-
 		for (Chunk chunk : compare.getChunks()) {
-			ChunkSendMessage crm = new ChunkSendMessage(chunk, localPeer);
-			send(crm);
+			send(new ChunkSendMessage(chunk, localPeer));
 		}
+	}
+	
+	private void receiveLists(ChunkListMessage message, LocalPeer localPeer) {
+		tracker.syncReceived();
+		syncReceiverList(message.getReceiverChunks(), localPeer);
+		syncSenderList(message.getSenderChunks());
 	}
 
 	private boolean receiveChunk(ChunkMessage message, LocalPeer localPeer) {
@@ -188,26 +174,18 @@ public class RemotePeer extends Peer {
 		byte[] data = message.getData();
 
 		if (message instanceof ChunkSendMessage) {
-			return receiveRemoteChunk(chunk, data, localPeer);
+			return receiveRemoteChunk(chunk, data);
 		} else if (message instanceof ChunkReturnMessage) {
-			return receiveLocalChunk(chunk, data, localPeer);
+			return localPeer.receiveChunkData(chunk, data);
 		} else {
 			return false;
 		}
 	}
 
-	private boolean receiveLocalChunk(Chunk chunk, byte[] data, LocalPeer localPeer) {
-		return localPeer.receiveChunkData(chunk, data);
-	}
-
 	/**
-	 * Should have some synchronization here.
-	 * 
-	 * @param chunk
-	 * @param data
-	 * @return
+	 * @todo Should have some synchronization here
 	 */
-	private boolean receiveRemoteChunk(Chunk chunk, byte[] data, LocalPeer localPeer) {
+	private boolean receiveRemoteChunk(Chunk chunk, byte[] data) {
 		if (remoteChunks.has(chunk)) {
 			return false;
 		}
@@ -218,53 +196,19 @@ public class RemotePeer extends Peer {
 		}
 
 		logger.info("receive " + new DateTime().getMillis());
-		return writeChunkData(chunk, data, remoteChunks, localPeer);
+		return writeChunkData(chunk, data, remoteChunks);
 	}
 
-	/** Connect and send messages, if not already connected. */
-	public void connectForSend(LocalPeer localPeer) {
-		if (outgoing.isEmpty() || isHandled()) {
-			return;
-		}
-
-		localPeer.connect(this);
+	public boolean needsConnect() {
+		return !(outgoing.isEmpty() || isHandled());
+	}
+	
+	public boolean needsChunkListing(ReadableDuration listValidDuration) {
+		return tracker.needsSync(listValidDuration);
 	}
 
-	/**
-	 * Call when receive a chunk list too!
-	 */
-	public void maintenance(LocalPeer localPeer) {
-		DateTime now = new DateTime();
-
-		DateTime listValidAfter = now.minus(localPeer.getListDuration());
-		if (tracker.getSyncReceived() == null || tracker.getSyncSent() == null
-				|| tracker.getSyncReceived().isBefore(listValidAfter)
-				|| tracker.getSyncSent().isBefore(listValidAfter)) {
-			sendChunkListing();
-		}
-
-		DateTime lastStatusRequired = now.minus(localPeer.getStatusDuration());
-		if (tracker.getLastReceived() == null || tracker.getLastSent() == null
-				|| tracker.getLastReceived().isBefore(lastStatusRequired)
-				|| tracker.getLastSent().isBefore(lastStatusRequired)) {
-			send(new StatusMessage(localPeer));
-		}
-
-		if (!isConnectionUsed(localPeer)) {
-			connectForSend(localPeer);
-		}
-	}
-
-	/** Is there another peer with the same address, that is already handled? */
-	public boolean isConnectionUsed(LocalPeer localPeer) {
-		for (RemotePeer checkPeer : localPeer.getPeers()) {
-			if (getHost().equals(checkPeer.getHost())
-					&& getPort() == checkPeer.getPort()
-					&& checkPeer.isHandled()) {
-				return true;
-			}
-		}
-		return false;
+	public boolean needsStatus(ReadableDuration statusValidDuration) {
+		return tracker.needsStatus(statusValidDuration);
 	}
 
 	@Override

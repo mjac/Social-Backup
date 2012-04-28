@@ -35,6 +35,7 @@ import com.mjac.socialbackup.RandomisedId;
 import com.mjac.socialbackup.crypto.BouncyCastleGenerator;
 import com.mjac.socialbackup.crypto.KeystoreManager;
 import com.mjac.socialbackup.crypto.OpenTrustManager;
+import com.mjac.socialbackup.msg.ChunkListMessage;
 import com.mjac.socialbackup.msg.StatusMessage;
 import com.mjac.socialbackup.services.Maintenance;
 import com.mjac.socialbackup.services.SslConnection;
@@ -508,7 +509,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 
 		// There is an empty reference to the chunk (missing).
 		if (chunks.missing(chunk)) {
-			writeChunkData(chunk, data, chunks, this);
+			writeChunkData(chunk, data, chunks);
 			return false;
 		}
 
@@ -529,7 +530,7 @@ public class LocalPeer extends Peer implements ChangeListener {
 				}
 			}
 
-			writeChunkData(chunk, data, chunks, this);
+			writeChunkData(chunk, data, chunks);
 			persist();
 			return true;
 		}
@@ -616,9 +617,44 @@ public class LocalPeer extends Peer implements ChangeListener {
 	}
 
 	/** Check to see if peers have messages to send or needs sync. */
-	public void performSync() {
+	public void syncAllPeers() {
 		for (RemotePeer peer : getPeers()) {
-			peer.maintenance(this);
+			syncPeer(peer);
 		}
+	}
+	
+	public void syncPeer(RemotePeer peer) {
+		if (peer.needsChunkListing(getListDuration())) {
+			peer.sendChunkListing();
+		}
+
+		if (peer.needsStatus(getStatusDuration())) {
+			peer.send(new StatusMessage(this));
+		}
+
+		if (!isConnectedTo(peer) && peer.needsConnect()) {
+			connect(peer);
+		}
+	}
+	
+	public boolean isConnectedTo(RemotePeer remotePeer) {
+		for (RemotePeer checkPeer : getPeers()) {
+			if (remotePeer.getHost().equals(checkPeer.getHost())
+					&& remotePeer.getPort() == checkPeer.getPort()
+					&& checkPeer.isHandled()) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	public boolean hasBackup(Backup backup) {
+		ChunkList peerStore = getChunkList();
+		for (Id chunkId : backup.getChunkIds()) {
+			if (!peerStore.has(chunkId)) {
+				return false;
+			}
+		}
+		return true;
 	}
 }

@@ -37,7 +37,7 @@ public class Maintenance extends Thread {
 			}
 
 			if (taskIdx % syncInterval == 0) {
-				user.performSync();
+				user.syncAllPeers();
 			}
 
 			if (taskIdx % timeoutInterval == 0) {
