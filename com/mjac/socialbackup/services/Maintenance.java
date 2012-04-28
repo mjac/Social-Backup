@@ -58,33 +58,13 @@ public class Maintenance extends Thread {
 
 	public void timeoutConnections() {
 		DateTime cutoffDate = new DateTime().minus(timeoutPeriod);
+
 		for (SslConnection sslConn : user.getConnections()) {
-			if (!isConnectionActive(sslConn, cutoffDate)) {
+			if (!sslConn.isConnectionActive(cutoffDate)) {
 				logger.trace("Disconnecting " + sslConn);
 				sslConn.disconnect();
 			}
 		}
-	}
-
-	private boolean isConnectionActive(SslConnection sslConn,
-			DateTime cutoffDate) {
-		if (sslConn.getLastSent().isAfter(cutoffDate)
-				|| sslConn.getLastReceived().isAfter(cutoffDate)) {
-			return true;
-		}
-
-		RemoteUser peer = sslConn.getPeer();
-		if (peer != null) {
-			PeerTracker tracker = peer.getTracker();
-			if (tracker.getLastSent().isAfter(cutoffDate)
-					|| tracker.getLastReceived().isAfter(cutoffDate)) {
-				return true;
-			}
-
-			// Make sure there is nothing in the message queue..!
-		}
-
-		return false;
 	}
 
 	public void exit() {

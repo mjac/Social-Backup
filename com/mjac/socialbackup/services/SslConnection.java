@@ -21,6 +21,7 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
 import com.mjac.socialbackup.ChangeDispatcher;
+import com.mjac.socialbackup.PeerTracker;
 import com.mjac.socialbackup.actors.LocalUser;
 import com.mjac.socialbackup.actors.Peer;
 import com.mjac.socialbackup.actors.RemoteUser;
@@ -388,6 +389,26 @@ public class SslConnection extends Peer {
 
 	public void stopReceiver() {
 		receiving = false;
+	}
+	
+	public boolean isConnectionActive(DateTime cutoffDate) {
+		if (getLastSent().isAfter(cutoffDate)
+				|| getLastReceived().isAfter(cutoffDate)) {
+			return true;
+		}
+
+		RemoteUser peer = getPeer();
+		if (peer != null) {
+			PeerTracker tracker = peer.getTracker();
+			if (tracker.getLastSent().isAfter(cutoffDate)
+					|| tracker.getLastReceived().isAfter(cutoffDate)) {
+				return true;
+			}
+
+			// Make sure there is nothing in the message queue..!
+		}
+
+		return false;
 	}
 
 	// Serialisation not allowed for SslConnections, although they extend
