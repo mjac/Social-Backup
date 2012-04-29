@@ -451,7 +451,7 @@ public class LocalUser extends User implements ChangeListener {
 			return;
 		}
 
-		for (Id clientId : peerIds.toArray(new Id[]{})) {
+		for (Id clientId : peerIds.toArray(new Id[] {})) {
 			RemoteUser cp = new RemoteUser(clientId, directory);
 
 			try {
@@ -689,7 +689,7 @@ public class LocalUser extends User implements ChangeListener {
 		syncReceiverList(message.getReceiverChunks(), peer);
 		syncSenderList(message.getSenderChunks(), peer);
 	}
-	
+
 	private void syncSenderList(ChunkList senderChunks, RemoteUser peer) {
 		ChunkList compare = senderChunks.missing(peer.remoteChunks);
 		for (Chunk chunk : compare.getChunks()) {
@@ -703,7 +703,7 @@ public class LocalUser extends User implements ChangeListener {
 			peer.send(new ChunkSendMessage(chunk, this));
 		}
 	}
-	
+
 	public boolean receiveChunk(ChunkMessage message, RemoteUser peer) {
 		Chunk chunk = message.getChunk();
 		byte[] data = message.getData();

@@ -2,7 +2,9 @@ package com.mjac.socialbackup.unittest;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.security.Security;
+import java.util.Collection;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.BasicConfigurator;
@@ -28,6 +30,8 @@ public class NetworkTest {
 	public static File dir = new File("networktest");
 
 	public static int peerAmount = 2;
+	public static int port = 15323;
+	public static int peerIndex = 100;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -51,8 +55,8 @@ public class NetworkTest {
 
 	@Before
 	public void setUp() throws Exception {
-		me = createRandomPeer(0);
-		you = createRandomPeer(1);
+		me = createRandomPeer(++peerIndex);
+		you = createRandomPeer(++peerIndex);
 	}
 
 	private LocalUser createRandomPeer(int peerIndex) throws Exception {
@@ -71,7 +75,7 @@ public class NetworkTest {
 		localPeer.createKeys();
 		localPeer.setValidAlias("Host" + peerIndex);
 		localPeer.setValidEmail("host" + peerIndex + "@localhost.com");
-		localPeer.setValidHostPort("localhost", 15323 + peerIndex);
+		localPeer.setValidHostPort("localhost", ++port);
 
 		ChangeDispatcher changeDispatcher = new ChangeDispatcher();
 		changeDispatcher.createThread();
@@ -91,7 +95,33 @@ public class NetworkTest {
 	@Test
 	public void connect() throws Exception {
 		me.startServer();
+		you.startServer();
 
+		Assert.assertTrue(me.connect(you));
+	}
+	
+	private RemoteUser connectFirstPeer(LocalUser user) {
+		SslConnection[] sslConns = user.getConnections().toArray(new SslConnection[] {});
+		
+		Assert.assertTrue(sslConns.length > 0);
+		
+		RemoteUser meInYou = user.createPeer(sslConns[0], 100);
+		Assert.assertTrue(meInYou.isHandled());
+		Assert.assertTrue(user.isConnectedTo(meInYou));
+		
+		return meInYou;
+	}
+	
+	@Test
+	public void makeFriends() throws Exception {
+		connect();
+
+		connectFirstPeer(me);
+		connectFirstPeer(you);
+	}
+
+	@Test
+	public void createBackup() throws IOException {
 		File myBackup = File.createTempFile(me.getAlias(), null);
 		FileWriter fw = new FileWriter(myBackup);
 		fw.write(backupText);
@@ -99,20 +129,12 @@ public class NetworkTest {
 
 		Backup backup = new Backup(myBackup);
 		me.addBackup(backup);
-
-		you.startServer();
-
-		Assert.assertTrue(me.connect(you));
-
-		RemoteUser meInYou = you.createPeer(
-				me.getConnections().toArray(new SslConnection[] {})[0], 100);
-		Assert.assertTrue(meInYou.isHandled());
-		Assert.assertTrue(you.isConnectedTo(meInYou));
-
-		RemoteUser youInMe = me.createPeer(
-				you.getConnections().toArray(new SslConnection[] {})[0], 100);
-		Assert.assertTrue(youInMe.isHandled());
-		Assert.assertTrue(me.isConnectedTo(youInMe));
+	}
+	
+	@Test
+	public void sendBackup() throws Exception {
+		makeFriends();
+		createBackup();
 
 		me.createPlacingStrategy();
 		me.syncAllPeers();
